@@ -46,21 +46,21 @@ enum AMFType {
 class AMFValue;
 
 class AMFValue {
-public:
-
+    public:
 	AMFValue(AMFType type = AMF_NULL);
-	AMFValue(const char *s);
-	AMFValue(const std::string &s);
+	AMFValue(const char* s);
+	AMFValue(const std::string& s);
 	AMFValue(double n);
 	AMFValue(int i);
 	AMFValue(bool b);
-	AMFValue(const AMFValue &from);
-	AMFValue(AMFValue &&from);
-	AMFValue &operator =(const AMFValue &from);
-	AMFValue &operator =(AMFValue &&from);
+	AMFValue(const AMFValue& from);
+	AMFValue(AMFValue&& from);
+	AMFValue& operator=(const AMFValue& from);
+	AMFValue& operator=(AMFValue&& from);
 	~AMFValue();
 
-	void clear() {
+	void clear()
+	{
 		switch (_type) {
 		case AMF_STRING:
 			_value.string->clear();
@@ -74,17 +74,20 @@ public:
 		}
 	}
 
-	AMFType type() const {
+	AMFType type() const
+	{
 		return _type;
 	}
 
-	const std::string &as_string() const {
-		if(_type != AMF_STRING){
+	const std::string& as_string() const
+	{
+		if (_type != AMF_STRING) {
 			throw std::runtime_error("AMF not a string");
 		}
 		return *_value.string;
 	}
-	double as_number() const {
+	double as_number() const
+	{
 		switch (_type) {
 		case AMF_NUMBER:
 			return _value.number;
@@ -98,7 +101,8 @@ public:
 			break;
 		}
 	}
-	int as_integer() const {
+	int as_integer() const
+	{
 		switch (_type) {
 		case AMF_NUMBER:
 			return _value.number;
@@ -112,7 +116,8 @@ public:
 			break;
 		}
 	}
-	bool as_boolean() const {
+	bool as_boolean() const
+	{
 		switch (_type) {
 		case AMF_NUMBER:
 			return _value.number;
@@ -127,7 +132,8 @@ public:
 		}
 	}
 
-	const AMFValue &operator[](const char *str) const {
+	const AMFValue& operator[](const char* str) const
+	{
 		if (_type != AMF_OBJECT && _type != AMF_ECMA_ARRAY) {
 			throw std::runtime_error("AMF not a object");
 		}
@@ -138,26 +144,29 @@ public:
 		}
 		return i->second;
 	}
-	template<typename FUN>
-	void object_for_each(const FUN &fun) const {
+	template<typename FUN> void object_for_each(const FUN& fun) const
+	{
 		if (_type != AMF_OBJECT && _type != AMF_ECMA_ARRAY) {
 			throw std::runtime_error("AMF not a object");
 		}
-		for (auto & pr : *(_value.object)) {
+		for (auto& pr : *(_value.object)) {
 			fun(pr.first, pr.second);
 		}
 	}
 
-	operator bool() const{
+	operator bool() const
+	{
 		return _type != AMF_NULL;
 	}
-	void set(const std::string &s, const AMFValue &val) {
+	void set(const std::string& s, const AMFValue& val)
+	{
 		if (_type != AMF_OBJECT && _type != AMF_ECMA_ARRAY) {
 			throw std::runtime_error("AMF not a object");
 		}
 		_value.object->emplace(s, val);
 	}
-	void add(const AMFValue &val) {
+	void add(const AMFValue& val)
+	{
 		if (_type != AMF_STRICT_ARRAY) {
 			throw std::runtime_error("AMF not a array");
 		}
@@ -165,28 +174,30 @@ public:
 		_value.array->push_back(val);
 	}
 
-private:
+    private:
 	typedef std::map<std::string, AMFValue> mapType;
-	typedef std::vector<AMFValue> arrayType;
+	typedef std::vector<AMFValue>		arrayType;
 
 	AMFType _type;
 	union {
-		std::string *string;
-		double number;
-		int integer;
-		bool boolean;
-		mapType *object;
-		arrayType *array;
+		std::string* string;
+		double       number;
+		int	  integer;
+		bool	 boolean;
+		mapType*     object;
+		arrayType*   array;
 	} _value;
 
 	friend class AMFEncoder;
-	const mapType &getMap() const {
+	const mapType& getMap() const
+	{
 		if (_type != AMF_OBJECT && _type != AMF_ECMA_ARRAY) {
 			throw std::runtime_error("AMF not a object");
 		}
 		return *_value.object;
 	}
-	const arrayType &getArr() const {
+	const arrayType& getArr() const
+	{
 		if (_type != AMF_STRICT_ARRAY) {
 			throw std::runtime_error("AMF not a array");
 		}
@@ -197,53 +208,56 @@ private:
 };
 
 class AMFDecoder {
-public:
-	AMFDecoder(const std::string &_buf, size_t _pos, int _version = 0) :
-			buf(_buf), pos(_pos), version(_version) {
+    public:
+	AMFDecoder(const std::string& _buf, size_t _pos, int _version = 0)
+		: buf(_buf)
+		, pos(_pos)
+		, version(_version)
+	{
 	}
 
-	int getVersion() const {
+	int getVersion() const
+	{
 		return version;
 	}
 
-	template<typename TP>
-	TP load();
+	template<typename TP> TP load();
 
-
-
-private:
-	const std::string &buf;
-	size_t pos;
-	int version;
+    private:
+	const std::string& buf;
+	size_t		   pos;
+	int		   version;
 
 	std::string load_key();
-	AMFValue load_object();
-	AMFValue load_ecma();
-	AMFValue load_arr();
-	uint8_t front();
-	uint8_t pop_front();
+	AMFValue    load_object();
+	AMFValue    load_ecma();
+	AMFValue    load_arr();
+	uint8_t     front();
+	uint8_t     pop_front();
 };
 
 class AMFEncoder {
-public:
-	AMFEncoder & operator <<(const char *s);
-	AMFEncoder & operator <<(const std::string &s);
-	AMFEncoder & operator <<(std::nullptr_t);
-	AMFEncoder & operator <<(const int n);
-	AMFEncoder & operator <<(const double n);
-	AMFEncoder & operator <<(const bool b);
-	AMFEncoder & operator <<(const AMFValue &value);
-	const std::string data() const {
+    public:
+	AMFEncoder&       operator<<(const char* s);
+	AMFEncoder&       operator<<(const std::string& s);
+	AMFEncoder&       operator<<(std::nullptr_t);
+	AMFEncoder&       operator<<(const int n);
+	AMFEncoder&       operator<<(const double n);
+	AMFEncoder&       operator<<(const bool b);
+	AMFEncoder&       operator<<(const AMFValue& value);
+	const std::string data() const
+	{
 		return buf;
 	}
-	void clear() {
+	void clear()
+	{
 		buf.clear();
 	}
-private:
-	void write_key(const std::string &s);
-	AMFEncoder &write_undefined();
+
+    private:
+	void	write_key(const std::string& s);
+	AMFEncoder& write_undefined();
 	std::string buf;
 };
-
 
 #endif

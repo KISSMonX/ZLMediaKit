@@ -32,17 +32,22 @@
 
 namespace mediakit {
 
-class HlsRecorder : public HlsMakerImp , public TsMuxer  {
-public:
-    template<typename ...ArgsType>
-    HlsRecorder(ArgsType &&...args):HlsMakerImp(std::forward<ArgsType>(args)...){}
-    ~HlsRecorder(){};
-protected:
-    void onTs(const void *packet, int bytes,uint32_t timestamp,int flags) override {
-        inputData((char *)packet,bytes,timestamp);
-    };
-};
+	class HlsRecorder : public HlsMakerImp, public TsMuxer {
+	    public:
+		template<typename... ArgsType>
+		HlsRecorder(ArgsType&&... args)
+			: HlsMakerImp(std::forward<ArgsType>(args)...)
+		{
+		}
+		~HlsRecorder(){};
 
-}//namespace mediakit
+	    protected:
+		void onTs(const void* packet, int bytes, uint32_t timestamp, int flags) override
+		{
+			inputData((char*)packet, bytes, timestamp);
+		};
+	};
 
-#endif //HLSRECORDER_H
+} // namespace mediakit
+
+#endif // HLSRECORDER_H

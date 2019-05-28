@@ -37,37 +37,34 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class MediaRecorder : public MediaSink{
-public:
-	typedef std::shared_ptr<MediaRecorder> Ptr;
-	MediaRecorder(const string &strVhost,
-                  const string &strApp,
-                  const string &strId,
-                  bool enableHls = true,
-                  bool enableMp4 = false);
-	virtual ~MediaRecorder();
+	class MediaRecorder : public MediaSink {
+	    public:
+		typedef std::shared_ptr<MediaRecorder> Ptr;
+		MediaRecorder(const string& strVhost, const string& strApp, const string& strId, bool enableHls = true, bool enableMp4 = false);
+		virtual ~MediaRecorder();
 
-	/**
-     * 输入frame
-     * @param frame
-     */
-	void inputFrame(const Frame::Ptr &frame) override ;
+		/**
+		 * 输入frame
+		 * @param frame
+		 */
+		void inputFrame(const Frame::Ptr& frame) override;
 
-	/**
-     * 添加track，内部会调用Track的clone方法
-     * 只会克隆sps pps这些信息 ，而不会克隆Delegate相关关系
-     * @param track
-     */
-	void addTrack(const Track::Ptr & track) override;
-private:
+		/**
+		 * 添加track，内部会调用Track的clone方法
+		 * 只会克隆sps pps这些信息 ，而不会克隆Delegate相关关系
+		 * @param track
+		 */
+		void addTrack(const Track::Ptr& track) override;
+
+	    private:
 #if defined(ENABLE_HLS)
-	std::shared_ptr<HlsRecorder> _hlsMaker;
-#endif //defined(ENABLE_HLS)
+		std::shared_ptr<HlsRecorder> _hlsMaker;
+#endif // defined(ENABLE_HLS)
 
 #if defined(ENABLE_MP4V2)
-	std::shared_ptr<Mp4Maker> _mp4Maker;
-#endif //defined(ENABLE_MP4V2)
-};
+		std::shared_ptr<Mp4Maker> _mp4Maker;
+#endif // defined(ENABLE_MP4V2)
+	};
 
 } /* namespace mediakit */
 

@@ -35,26 +35,26 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class ShellSession: public TcpSession {
-public:
-	ShellSession(const Socket::Ptr &_sock);
-	virtual ~ShellSession();
+	class ShellSession : public TcpSession {
+	    public:
+		ShellSession(const Socket::Ptr& _sock);
+		virtual ~ShellSession();
 
-	void onRecv(const Buffer::Ptr &) override;
-    void onError(const SockException &err) override {};
-	void onManager() override;
+		void onRecv(const Buffer::Ptr&) override;
+		void onError(const SockException& err) override{};
+		void onManager() override;
 
-private:
-	inline bool onCommandLine(const string &);
-	inline void pleaseInputUser();
-	inline void pleaseInputPasswd();
-	inline void printShellPrefix();
+	    private:
+		inline bool onCommandLine(const string&);
+		inline void pleaseInputUser();
+		inline void pleaseInputPasswd();
+		inline void printShellPrefix();
 
-	function<bool(const string &)> _loginInterceptor;
-	string _strRecvBuf;
-	Ticker _beatTicker;
-	string _strUserName;
-};
+		function<bool(const string&)> _loginInterceptor;
+		string			      _strRecvBuf;
+		Ticker			      _beatTicker;
+		string			      _strUserName;
+	};
 
 } /* namespace mediakit */
 

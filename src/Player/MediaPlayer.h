@@ -37,19 +37,20 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class MediaPlayer : public PlayerImp<PlayerBase,PlayerBase> {
-public:
-	typedef std::shared_ptr<MediaPlayer> Ptr;
+	class MediaPlayer : public PlayerImp<PlayerBase, PlayerBase> {
+	    public:
+		typedef std::shared_ptr<MediaPlayer> Ptr;
 
-	MediaPlayer(const EventPoller::Ptr &poller = nullptr);
-	virtual ~MediaPlayer();
-	void play(const string &strUrl) override;
-	void pause(bool bPause) override;
-	void teardown() override;
-	EventPoller::Ptr getPoller();
-private:
-	EventPoller::Ptr _poller;
-};
+		MediaPlayer(const EventPoller::Ptr& poller = nullptr);
+		virtual ~MediaPlayer();
+		void		 play(const string& strUrl) override;
+		void		 pause(bool bPause) override;
+		void		 teardown() override;
+		EventPoller::Ptr getPoller();
+
+	    private:
+		EventPoller::Ptr _poller;
+	};
 
 } /* namespace mediakit */
 

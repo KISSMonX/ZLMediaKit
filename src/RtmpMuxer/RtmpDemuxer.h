@@ -39,62 +39,48 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class RtmpDemuxer : public Demuxer{
-public:
-	typedef std::shared_ptr<RtmpDemuxer> Ptr;
+	class RtmpDemuxer : public Demuxer {
+	    public:
+		typedef std::shared_ptr<RtmpDemuxer> Ptr;
 
-	/**
-	 * 等效于RtmpDemuxer(AMFValue(AMF_NULL))
-	 */
-	RtmpDemuxer(){}
-	/**
-	 * 构造rtmp解复用器
-	 * @param val rtmp的metedata，可以传入null类型，
-	 * 这样就会在inputRtmp时异步探测媒体编码格式
-	 */
-	RtmpDemuxer(const AMFValue &val);
-	virtual ~RtmpDemuxer(){};
+		/**
+		 * 等效于RtmpDemuxer(AMFValue(AMF_NULL))
+		 */
+		RtmpDemuxer() {}
+		/**
+		 * 构造rtmp解复用器
+		 * @param val rtmp的metedata，可以传入null类型，
+		 * 这样就会在inputRtmp时异步探测媒体编码格式
+		 */
+		RtmpDemuxer(const AMFValue& val);
+		virtual ~RtmpDemuxer(){};
 
-	/**
-	 *
-	 * 获取rtmp track 数
-	 * @param metedata rtmp的metedata
-	 * @return
-	 */
-	static int getTrackCount(const AMFValue &metedata);
+		/**
+		 *
+		 * 获取rtmp track 数
+		 * @param metedata rtmp的metedata
+		 * @return
+		 */
+		static int getTrackCount(const AMFValue& metedata);
 
-	/**
-	 * 开始解复用
-	 * @param pkt rtmp包
-	 * @return true 代表是i帧
-	 */
-	bool inputRtmp(const RtmpPacket::Ptr &pkt);
-private:
-	void makeVideoTrack(const AMFValue &val);
-	void makeAudioTrack(const AMFValue &val);
-private:
-	bool _tryedGetVideoTrack = false;
-	bool _tryedGetAudioTrack = false;
-	RtmpCodec::Ptr _audioRtmpDecoder;
-	RtmpCodec::Ptr _videoRtmpDecoder;
-};
+		/**
+		 * 开始解复用
+		 * @param pkt rtmp包
+		 * @return true 代表是i帧
+		 */
+		bool inputRtmp(const RtmpPacket::Ptr& pkt);
+
+	    private:
+		void makeVideoTrack(const AMFValue& val);
+		void makeAudioTrack(const AMFValue& val);
+
+	    private:
+		bool	   _tryedGetVideoTrack = false;
+		bool	   _tryedGetAudioTrack = false;
+		RtmpCodec::Ptr _audioRtmpDecoder;
+		RtmpCodec::Ptr _videoRtmpDecoder;
+	};
 
 } /* namespace mediakit */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endif /* SRC_RTMP_RTMPDEMUXER_H_ */

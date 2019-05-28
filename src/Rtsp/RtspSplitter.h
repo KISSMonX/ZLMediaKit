@@ -30,50 +30,51 @@
 #include "Rtsp.h"
 #include "Http/HttpRequestSplitter.h"
 
-namespace mediakit{
+namespace mediakit {
 
-class RtspSplitter : public HttpRequestSplitter{
-public:
-    RtspSplitter(){}
-    virtual ~RtspSplitter(){}
+	class RtspSplitter : public HttpRequestSplitter {
+	    public:
+		RtspSplitter() {}
+		virtual ~RtspSplitter() {}
 
-    /**
-    * 是否允许接收rtp包
-    * @param enable
-    */
-    void enableRecvRtp(bool enable);
-protected:
-    /**
-     * 收到完整的rtsp包回调，包括sdp等content数据
-     * @param parser rtsp包
-     */
-    virtual void onWholeRtspPacket(Parser &parser) = 0;
+		/**
+		 * 是否允许接收rtp包
+		 * @param enable
+		 */
+		void enableRecvRtp(bool enable);
 
-    /**
-     * 收到rtp包回调
-     * @param data
-     * @param len
-     */
-    virtual void onRtpPacket(const char *data,uint64_t len) = 0;
+	    protected:
+		/**
+		 * 收到完整的rtsp包回调，包括sdp等content数据
+		 * @param parser rtsp包
+		 */
+		virtual void onWholeRtspPacket(Parser& parser) = 0;
 
-    /**
-     * 从rtsp头中获取Content长度
-     * @param parser
-     * @return
-     */
-    virtual int64_t getContentLength(Parser &parser);
-protected:
-    const char *onSearchPacketTail(const char *data,int len) override ;
-    int64_t onRecvHeader(const char *data,uint64_t len) override;
-    void onRecvContent(const char *data,uint64_t len) override;
-private:
-    bool _enableRecvRtp = false;
-    bool _isRtpPacket = false;
-    Parser _parser;
-};
+		/**
+		 * 收到rtp包回调
+		 * @param data
+		 * @param len
+		 */
+		virtual void onRtpPacket(const char* data, uint64_t len) = 0;
 
-}//namespace mediakit
+		/**
+		 * 从rtsp头中获取Content长度
+		 * @param parser
+		 * @return
+		 */
+		virtual int64_t getContentLength(Parser& parser);
 
+	    protected:
+		const char* onSearchPacketTail(const char* data, int len) override;
+		int64_t     onRecvHeader(const char* data, uint64_t len) override;
+		void	onRecvContent(const char* data, uint64_t len) override;
 
+	    private:
+		bool   _enableRecvRtp = false;
+		bool   _isRtpPacket   = false;
+		Parser _parser;
+	};
 
-#endif //ZLMEDIAKIT_RTSPSPLITTER_H
+} // namespace mediakit
+
+#endif // ZLMEDIAKIT_RTSPSPLITTER_H

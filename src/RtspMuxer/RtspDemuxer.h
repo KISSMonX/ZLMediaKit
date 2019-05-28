@@ -38,27 +38,29 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class RtspDemuxer : public Demuxer{
-public:
-	typedef std::shared_ptr<RtspDemuxer> Ptr;
-	RtspDemuxer(const string &sdp);
-	RtspDemuxer(const SdpAttr &attr);
-	virtual ~RtspDemuxer(){};
+	class RtspDemuxer : public Demuxer {
+	    public:
+		typedef std::shared_ptr<RtspDemuxer> Ptr;
+		RtspDemuxer(const string& sdp);
+		RtspDemuxer(const SdpAttr& attr);
+		virtual ~RtspDemuxer(){};
 
-	/**
-	 * 开始解复用
-	 * @param rtp rtp包
-	 * @return true 代表是i帧第一个rtp包
-	 */
-	bool inputRtp(const RtpPacket::Ptr &rtp);
-private:
-	void makeAudioTrack(const SdpTrack::Ptr &audio);
-	void makeVideoTrack(const SdpTrack::Ptr &video);
-	void loadSdp(const SdpAttr &attr);
-private:
-	RtpCodec::Ptr _audioRtpDecoder;
-	RtpCodec::Ptr _videoRtpDecoder;
-};
+		/**
+		 * 开始解复用
+		 * @param rtp rtp包
+		 * @return true 代表是i帧第一个rtp包
+		 */
+		bool inputRtp(const RtpPacket::Ptr& rtp);
+
+	    private:
+		void makeAudioTrack(const SdpTrack::Ptr& audio);
+		void makeVideoTrack(const SdpTrack::Ptr& video);
+		void loadSdp(const SdpAttr& attr);
+
+	    private:
+		RtpCodec::Ptr _audioRtpDecoder;
+		RtpCodec::Ptr _videoRtpDecoder;
+	};
 
 } /* namespace mediakit */
 

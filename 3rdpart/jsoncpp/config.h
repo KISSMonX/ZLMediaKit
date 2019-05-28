@@ -72,12 +72,12 @@
 #define JSONCPP_DEPRECATED(message) __declspec(deprecated(message))
 #elif defined(__clang__) && defined(__has_feature)
 #if __has_feature(attribute_deprecated_with_message)
-#define JSONCPP_DEPRECATED(message)  __attribute__ ((deprecated(message)))
+#define JSONCPP_DEPRECATED(message) __attribute__((deprecated(message)))
 #endif
-#elif defined(__GNUC__) &&  (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
-#define JSONCPP_DEPRECATED(message)  __attribute__ ((deprecated(message)))
-#elif defined(__GNUC__) &&  (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
-#define JSONCPP_DEPRECATED(message)  __attribute__((__deprecated__))
+#elif defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#define JSONCPP_DEPRECATED(message) __attribute__((deprecated(message)))
+#elif defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
+#define JSONCPP_DEPRECATED(message) __attribute__((__deprecated__))
 #endif
 
 #if !defined(JSONCPP_DEPRECATED)
@@ -85,23 +85,23 @@
 #endif // if !defined(JSONCPP_DEPRECATED)
 
 namespace Json {
-typedef int Int;
-typedef unsigned int UInt;
+	typedef int	  Int;
+	typedef unsigned int UInt;
 #if defined(JSON_NO_INT64)
-typedef int LargestInt;
-typedef unsigned int LargestUInt;
+	typedef int	  LargestInt;
+	typedef unsigned int LargestUInt;
 #undef JSON_HAS_INT64
-#else                 // if defined(JSON_NO_INT64)
+#else		      // if defined(JSON_NO_INT64)
 // For Microsoft Visual use specific types as long long is not supported
 #if defined(_MSC_VER) // Microsoft Visual Studio
-typedef __int64 Int64;
-typedef unsigned __int64 UInt64;
-#else                 // if defined(_MSC_VER) // Other platforms, use long long
-typedef long long int Int64;
-typedef unsigned long long int UInt64;
-#endif // if defined(_MSC_VER)
-typedef Int64 LargestInt;
-typedef UInt64 LargestUInt;
+	typedef __int64		 Int64;
+	typedef unsigned __int64 UInt64;
+#else		      // if defined(_MSC_VER) // Other platforms, use long long
+	typedef long long int	  Int64;
+	typedef unsigned long long int UInt64;
+#endif		      // if defined(_MSC_VER)
+	typedef Int64		 LargestInt;
+	typedef UInt64		 LargestUInt;
 #define JSON_HAS_INT64
 #endif // if defined(JSON_NO_INT64)
 } // end namespace Json

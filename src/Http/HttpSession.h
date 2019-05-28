@@ -41,87 +41,81 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class HttpSession: public TcpSession,
-                   public FlvMuxer,
-                   public HttpRequestSplitter,
-                   public WebSocketSplitter {
-public:
-	typedef StrCaseMap KeyValue;
-	typedef std::function<void(const string &codeOut,
-							   const KeyValue &headerOut,
-							   const string &contentOut)>  HttpResponseInvoker;
+	class HttpSession : public TcpSession, public FlvMuxer, public HttpRequestSplitter, public WebSocketSplitter {
+	    public:
+		typedef StrCaseMap											KeyValue;
+		typedef std::function<void(const string& codeOut, const KeyValue& headerOut, const string& contentOut)> HttpResponseInvoker;
 
-	HttpSession(const Socket::Ptr &pSock);
-	virtual ~HttpSession();
+		HttpSession(const Socket::Ptr& pSock);
+		virtual ~HttpSession();
 
-	virtual void onRecv(const Buffer::Ptr &) override;
-	virtual void onError(const SockException &err) override;
-	virtual void onManager() override;
+		virtual void onRecv(const Buffer::Ptr&) override;
+		virtual void onError(const SockException& err) override;
+		virtual void onManager() override;
 
-	static string urlDecode(const string &str);
-protected:
-	//FlvMuxer override
-	void onWrite(const Buffer::Ptr &data) override ;
-	void onDetach() override;
-	std::shared_ptr<FlvMuxer> getSharedPtr() override;
-	//HttpRequestSplitter override
+		static string urlDecode(const string& str);
 
-	int64_t onRecvHeader(const char *data,uint64_t len) override;
-	void onRecvContent(const char *data,uint64_t len) override;
+	    protected:
+		// FlvMuxer override
+		void			  onWrite(const Buffer::Ptr& data) override;
+		void			  onDetach() override;
+		std::shared_ptr<FlvMuxer> getSharedPtr() override;
+		// HttpRequestSplitter override
 
-	/**
-	 * 重载之用于处理不定长度的content
-	 * 这个函数可用于处理大文件上传、http-flv推流
-	 * @param header http请求头
-	 * @param data content分片数据
-	 * @param len content分片数据大小
-	 * @param totalSize content总大小,如果为0则是不限长度content
-	 * @param recvedSize 已收数据大小
-	 */
-	virtual void onRecvUnlimitedContent(const Parser &header,
-										const char *data,
-										uint64_t len,
-										uint64_t totalSize,
-										uint64_t recvedSize){
-        WarnL << "content数据长度过大，无法处理,请重载HttpSession::onRecvUnlimitedContent";
-        shutdown();
-	}
+		int64_t onRecvHeader(const char* data, uint64_t len) override;
+		void    onRecvContent(const char* data, uint64_t len) override;
 
-    void onWebSocketDecodeHeader(const WebSocketHeader &packet) override{
-        DebugL << "默认关闭WebSocket";
-        shutdown();
-    };
+		/**
+		 * 重载之用于处理不定长度的content
+		 * 这个函数可用于处理大文件上传、http-flv推流
+		 * @param header http请求头
+		 * @param data content分片数据
+		 * @param len content分片数据大小
+		 * @param totalSize content总大小,如果为0则是不限长度content
+		 * @param recvedSize 已收数据大小
+		 */
+		virtual void onRecvUnlimitedContent(const Parser& header, const char* data, uint64_t len, uint64_t totalSize, uint64_t recvedSize)
+		{
+			WarnL << "content数据长度过大，无法处理,请重载HttpSession::onRecvUnlimitedContent";
+			shutdown();
+		}
 
-	void onRecvWebSocketData(const Parser &header,const char *data,uint64_t len){
-        WebSocketSplitter::decode((uint8_t *)data,len);
-    }
-private:
-	Parser _parser;
-	Ticker _ticker;
-	uint32_t _iReqCnt = 0;
-	//消耗的总流量
-	uint64_t _ui64TotalBytes = 0;
-	//flv over http
-    MediaInfo _mediaInfo;
-    //处理content数据的callback
-	function<bool (const char *data,uint64_t len) > _contentCallBack;
-private:
-	inline bool Handle_Req_GET(int64_t &content_len);
-	inline bool Handle_Req_POST(int64_t &content_len);
-	inline bool checkLiveFlvStream();
-	inline bool checkWebSocket();
-	inline bool emitHttpEvent(bool doInvoke);
-	inline void urlDecode(Parser &parser);
-	inline void sendNotFound(bool bClose);
-	inline void sendResponse(const char *pcStatus,const KeyValue &header,const string &strContent);
-	inline static KeyValue makeHttpHeader(bool bClose=false,int64_t iContentSize=-1,const char *pcContentType="text/html");
-	void responseDelay(const string &Origin,bool bClose,
-					   const string &codeOut,const KeyValue &headerOut,
-					   const string &contentOut);
-};
+		void onWebSocketDecodeHeader(const WebSocketHeader& packet) override
+		{
+			DebugL << "默认关闭WebSocket";
+			shutdown();
+		};
 
+		void onRecvWebSocketData(const Parser& header, const char* data, uint64_t len)
+		{
+			WebSocketSplitter::decode((uint8_t*)data, len);
+		}
 
-typedef TcpSessionWithSSL<HttpSession> HttpsSession;
+	    private:
+		Parser   _parser;
+		Ticker   _ticker;
+		uint32_t _iReqCnt = 0;
+		//消耗的总流量
+		uint64_t _ui64TotalBytes = 0;
+		// flv over http
+		MediaInfo _mediaInfo;
+		//处理content数据的callback
+		function<bool(const char* data, uint64_t len)> _contentCallBack;
+
+	    private:
+		inline bool	    Handle_Req_GET(int64_t& content_len);
+		inline bool	    Handle_Req_POST(int64_t& content_len);
+		inline bool	    checkLiveFlvStream();
+		inline bool	    checkWebSocket();
+		inline bool	    emitHttpEvent(bool doInvoke);
+		inline void	    urlDecode(Parser& parser);
+		inline void	    sendNotFound(bool bClose);
+		inline void	    sendResponse(const char* pcStatus, const KeyValue& header, const string& strContent);
+		inline static KeyValue makeHttpHeader(bool bClose = false, int64_t iContentSize = -1, const char* pcContentType = "text/html");
+		void		       responseDelay(const string& Origin, bool bClose, const string& codeOut, const KeyValue& headerOut, const string& contentOut);
+	};
+
+	typedef TcpSessionWithSSL<HttpSession> HttpsSession;
 
 } /* namespace mediakit */
 

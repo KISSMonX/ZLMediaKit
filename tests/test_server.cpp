@@ -50,52 +50,52 @@ using namespace toolkit;
 using namespace mediakit;
 
 namespace mediakit {
-////////////HTTP配置///////////
-namespace Http {
+	////////////HTTP配置///////////
+	namespace Http {
 #define HTTP_FIELD "http."
 #define HTTP_PORT 80
-	const char kPort[] = HTTP_FIELD "port";
+		const char kPort[] = HTTP_FIELD "port";
 #define HTTPS_PORT 443
-	const char kSSLPort[] = HTTP_FIELD "sslport";
-	onceToken  token1(
-		 []() {
-			 mINI::Instance()[kPort]    = HTTP_PORT;
-			 mINI::Instance()[kSSLPort] = HTTPS_PORT;
-		 },
-		 nullptr);
-} // namespace Http
+		const char kSSLPort[] = HTTP_FIELD "sslport";
+		onceToken  token1(
+			 []() {
+				 mINI::Instance()[kPort]    = HTTP_PORT;
+				 mINI::Instance()[kSSLPort] = HTTPS_PORT;
+			 },
+			 nullptr);
+	} // namespace Http
 
-////////////SHELL配置///////////
-namespace Shell {
+	////////////SHELL配置///////////
+	namespace Shell {
 #define SHELL_FIELD "shell."
 #define SHELL_PORT 9000
-	const char kPort[] = SHELL_FIELD "port";
-	onceToken  token1([]() { mINI::Instance()[kPort] = SHELL_PORT; }, nullptr);
-} // namespace Shell
+		const char kPort[] = SHELL_FIELD "port";
+		onceToken  token1([]() { mINI::Instance()[kPort] = SHELL_PORT; }, nullptr);
+	} // namespace Shell
 
-////////////RTSP服务器配置///////////
-namespace Rtsp {
+	////////////RTSP服务器配置///////////
+	namespace Rtsp {
 #define RTSP_FIELD "rtsp."
 #define RTSP_PORT 554
 #define RTSPS_PORT 322
-	const char kPort[]    = RTSP_FIELD "port";
-	const char kSSLPort[] = RTSP_FIELD "sslport";
-	onceToken  token1(
-		 []() {
-			 mINI::Instance()[kPort]    = RTSP_PORT;
-			 mINI::Instance()[kSSLPort] = RTSPS_PORT;
-		 },
-		 nullptr);
+		const char kPort[]    = RTSP_FIELD "port";
+		const char kSSLPort[] = RTSP_FIELD "sslport";
+		onceToken  token1(
+			 []() {
+				 mINI::Instance()[kPort]    = RTSP_PORT;
+				 mINI::Instance()[kSSLPort] = RTSPS_PORT;
+			 },
+			 nullptr);
 
-} // namespace Rtsp
+	} // namespace Rtsp
 
-////////////RTMP服务器配置///////////
-namespace Rtmp {
+	////////////RTMP服务器配置///////////
+	namespace Rtmp {
 #define RTMP_FIELD "rtmp."
 #define RTMP_PORT 1935
-	const char kPort[] = RTMP_FIELD "port";
-	onceToken  token1([]() { mINI::Instance()[kPort] = RTMP_PORT; }, nullptr);
-} // namespace Rtmp
+		const char kPort[] = RTMP_FIELD "port";
+		onceToken  token1([]() { mINI::Instance()[kPort] = RTMP_PORT; }, nullptr);
+	} // namespace Rtmp
 } // namespace mediakit
 
 #define REALM "realm_zlmedaikit"
@@ -180,8 +180,7 @@ static onceToken		     s_token(
 					    try {
 						    recorder->startRecord(EventPollerPool::Instance().getPoller(), dynamic_pointer_cast<RtmpMediaSource>(sender.shared_from_this()), path);
 						    s_mapFlvRecorder[vhost + "/" + app + "/" + stream] = recorder;
-					    }
-					    catch (std::exception& ex) {
+					    } catch (std::exception& ex) {
 						    WarnL << ex.what();
 					    }
 				    }
@@ -201,10 +200,7 @@ static onceToken		     s_token(
 		    });
 
 		    //监听播放或推流结束时消耗流量事件
-		    NoticeCenter::Instance().addListener(nullptr, Broadcast::kBroadcastFlowReport, [](BroadcastFlowReportArgs) {
-			    DebugL << "播放器(推流器)断开连接事件:" << args._schema << " " << args._vhost << " " << args._app << " " << args._streamid << " " << args._param_strs
-				   << "\r\n使用流量:" << totalBytes << " bytes,连接时长:" << totalDuration << "秒";
-		    });
+		    NoticeCenter::Instance().addListener(nullptr, Broadcast::kBroadcastFlowReport, [](BroadcastFlowReportArgs) { DebugL << "播放器(推流器)断开连接事件:" << args._schema << " " << args._vhost << " " << args._app << " " << args._streamid << " " << args._param_strs << "\r\n使用流量:" << totalBytes << " bytes,连接时长:" << totalDuration << "秒"; });
 	},
 	nullptr);
 

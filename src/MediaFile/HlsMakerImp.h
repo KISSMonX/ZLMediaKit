@@ -35,30 +35,29 @@ using namespace std;
 
 namespace mediakit {
 
-class HlsMakerImp : public HlsMaker{
-public:
-    HlsMakerImp(const string &m3u8_file,
-                const string &params,
-                uint32_t bufSize  = 64 * 1024,
-                float seg_duration = 5,
-                uint32_t seg_number = 3);
-    virtual ~HlsMakerImp();
-protected:
-    string onOpenFile(int index) override ;
-    void onDelFile(int index) override;
-    void onWriteFile(const char *data, int len) override;
-    void onWriteHls(const char *data, int len) override;
-private:
-    string fullPath(int index);
-    std::shared_ptr<FILE> makeFile(const string &file,bool setbuf = false);
-private:
-    std::shared_ptr<FILE> _file;
-    std::shared_ptr<char> _file_buf;
-    string _path_prefix;
-    string _path_hls;
-    string _params;
-    int _buf_size;
-};
+	class HlsMakerImp : public HlsMaker {
+	    public:
+		HlsMakerImp(const string& m3u8_file, const string& params, uint32_t bufSize = 64 * 1024, float seg_duration = 5, uint32_t seg_number = 3);
+		virtual ~HlsMakerImp();
 
-}//namespace mediakit
-#endif //HLSMAKERIMP_H
+	    protected:
+		string onOpenFile(int index) override;
+		void   onDelFile(int index) override;
+		void   onWriteFile(const char* data, int len) override;
+		void   onWriteHls(const char* data, int len) override;
+
+	    private:
+		string		      fullPath(int index);
+		std::shared_ptr<FILE> makeFile(const string& file, bool setbuf = false);
+
+	    private:
+		std::shared_ptr<FILE> _file;
+		std::shared_ptr<char> _file_buf;
+		string		      _path_prefix;
+		string		      _path_hls;
+		string		      _params;
+		int		      _buf_size;
+	};
+
+} // namespace mediakit
+#endif // HLSMAKERIMP_H

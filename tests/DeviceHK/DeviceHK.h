@@ -39,95 +39,91 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class connectInfo {
-public:
-	connectInfo(const char *_strDevIp,
-				uint16_t _ui16DevPort,
-				const char *_strUserName,
-				const char *_strPwd) {
-		strDevIp = _strDevIp;
-		ui16DevPort = _ui16DevPort;
-		strUserName = _strUserName;
-		strPwd = _strPwd;
-	}
-	string strDevIp;
-	uint16_t ui16DevPort;
-	string strUserName;
-	string strPwd;
-};
+	class connectInfo {
+	    public:
+		connectInfo(const char* _strDevIp, uint16_t _ui16DevPort, const char* _strUserName, const char* _strPwd)
+		{
+			strDevIp    = _strDevIp;
+			ui16DevPort = _ui16DevPort;
+			strUserName = _strUserName;
+			strPwd      = _strPwd;
+		}
+		string   strDevIp;
+		uint16_t ui16DevPort;
+		string   strUserName;
+		string   strPwd;
+	};
 
-class connectResult {
-public:
-	string strDevName;
-	uint16_t ui16ChnStart;
-	uint16_t ui16ChnCount;
-};
+	class connectResult {
+	    public:
+		string   strDevName;
+		uint16_t ui16ChnStart;
+		uint16_t ui16ChnCount;
+	};
 
-typedef function<void(bool success, const connectResult &)> connectCB;
-typedef function<void(bool success)> relustCB;
+	typedef function<void(bool success, const connectResult&)> connectCB;
+	typedef function<void(bool success)>			   relustCB;
 
-class Device: public enable_shared_from_this<Device> {
-public:
-	typedef std::shared_ptr<Device> Ptr;
-	Device() {
-	}
-	virtual ~Device(){ disconnect([](bool bSuccess){
-	});};
+	class Device : public enable_shared_from_this<Device> {
+	    public:
+		typedef std::shared_ptr<Device> Ptr;
+		Device() {}
+		virtual ~Device()
+		{
+			disconnect([](bool bSuccess) {});
+		};
 
-	virtual void connectDevice(const connectInfo &info, const connectCB &cb, int iTimeOut = 3)=0;
+		virtual void connectDevice(const connectInfo& info, const connectCB& cb, int iTimeOut = 3) = 0;
 
-	virtual void disconnect(const relustCB &cb) {
-	}
+		virtual void disconnect(const relustCB& cb) {}
 
-	virtual void addChannel(int iChnIndex, bool bMainStream = true)=0;
+		virtual void addChannel(int iChnIndex, bool bMainStream = true) = 0;
 
-	virtual void delChannel(int iChnIndex)=0;
+		virtual void delChannel(int iChnIndex) = 0;
 
-	virtual void addAllChannel(bool bMainStream = true)=0;
+		virtual void addAllChannel(bool bMainStream = true) = 0;
 
-protected:
-	void onConnected() {
-	}
-	void onDisconnected(bool bSelfDisconnect) {
-	}
+	    protected:
+		void onConnected() {}
+		void onDisconnected(bool bSelfDisconnect) {}
+	};
 
-};
+	class DevChannelHK;
+	class DeviceHK : public Device {
+	    public:
+		typedef std::shared_ptr<DeviceHK> Ptr;
+		DeviceHK();
+		virtual ~DeviceHK();
 
+		void connectDevice(const connectInfo& info, const connectCB& cb, int iTimeOut = 3) override;
+		void disconnect(const relustCB& cb) override;
 
-class DevChannelHK;
-class DeviceHK: public Device {
-public:
-	typedef std::shared_ptr<DeviceHK> Ptr;
-	DeviceHK();
-	virtual ~DeviceHK();
+		void addChannel(int iChnIndex, bool bMainStream = true) override;
+		void delChannel(int iChnIndex) override;
+		void addAllChannel(bool bMainStream = true) override;
 
-	void connectDevice(const connectInfo &info, const connectCB &cb, int iTimeOut = 3) override;
-	void disconnect(const relustCB &cb) override;
+	    private:
+		map<int, std::shared_ptr<DevChannel>> m_mapChannels;
+		int64_t				      m_i64LoginId = -1;
+		NET_DVR_DEVICEINFO_V30		      m_deviceInfo;
+		void				      onConnected(LONG lUserID, LPNET_DVR_DEVICEINFO_V30 lpDeviceInfo);
+	};
 
-	void addChannel(int iChnIndex, bool bMainStream = true) override;
-	void delChannel(int iChnIndex) override;
-	void addAllChannel(bool bMainStream = true) override;
-private:
-	map<int, std::shared_ptr<DevChannel> > m_mapChannels;
-	int64_t m_i64LoginId = -1;
-	NET_DVR_DEVICEINFO_V30 m_deviceInfo;
-	void onConnected(LONG lUserID, LPNET_DVR_DEVICEINFO_V30 lpDeviceInfo);
-};
+	class DevChannelHK : public DevChannel {
+	    public:
+		typedef std::shared_ptr<DevChannel> Ptr;
+		DevChannelHK(int64_t i64LoginId, const char* pcDevName, int iChn, bool bMainStream = true);
+		virtual ~DevChannelHK();
 
-class DevChannelHK: public DevChannel {
-public:
-	typedef std::shared_ptr<DevChannel> Ptr;
-	DevChannelHK(int64_t i64LoginId, const char *pcDevName, int iChn, bool bMainStream = true);
-	virtual ~DevChannelHK();
-protected:
-	int64_t m_i64LoginId = -1;
-	int64_t m_i64PreviewHandle = -1;
-	int m_iPlayHandle = -1;
-	void onPreview(DWORD dwDataType, BYTE *pBuffer, DWORD dwBufSize);
-	void onGetDecData(char * pBuf, int nSize, FRAME_INFO * pFrameInfo);
-	bool m_bVideoSeted = false;
-	bool m_bAudioSeted = false;
-};
+	    protected:
+		int64_t m_i64LoginId       = -1;
+		int64_t m_i64PreviewHandle = -1;
+		int     m_iPlayHandle      = -1;
+		void    onPreview(DWORD dwDataType, BYTE* pBuffer, DWORD dwBufSize);
+		void    onGetDecData(char* pBuf, int nSize, FRAME_INFO* pFrameInfo);
+		bool    m_bVideoSeted = false;
+		bool    m_bAudioSeted = false;
+	};
 
 } /* namespace mediakit */
 

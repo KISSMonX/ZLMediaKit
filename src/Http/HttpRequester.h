@@ -29,27 +29,28 @@
 
 #include "HttpClientImp.h"
 
-namespace mediakit{
+namespace mediakit {
 
-class HttpRequester : public HttpClientImp
-{
-public:
-    typedef std::shared_ptr<HttpRequester> Ptr;
-    typedef std::function<void(const SockException &ex,const string &status,const HttpHeader &header,const string &strRecvBody)> HttpRequesterResult;
-    HttpRequester();
-    virtual ~HttpRequester();
-    void startRequester(const string &url,const HttpRequesterResult &onResult,float timeOutSecond = 10);
-    void clear() override ;
-private:
-    int64_t onResponseHeader(const string &status,const HttpHeader &headers) override;
-    void onResponseBody(const char *buf,int64_t size,int64_t recvedSize,int64_t totalSize)  override;
-    void onResponseCompleted() override;
-    void onDisconnect(const SockException &ex) override;
-private:
-    string _strRecvBody;
-    HttpRequesterResult _onResult;
-};
+	class HttpRequester : public HttpClientImp {
+	    public:
+		typedef std::shared_ptr<HttpRequester>												Ptr;
+		typedef std::function<void(const SockException& ex, const string& status, const HttpHeader& header, const string& strRecvBody)> HttpRequesterResult;
+		HttpRequester();
+		virtual ~HttpRequester();
+		void startRequester(const string& url, const HttpRequesterResult& onResult, float timeOutSecond = 10);
+		void clear() override;
 
-}//namespace mediakit
+	    private:
+		int64_t onResponseHeader(const string& status, const HttpHeader& headers) override;
+		void    onResponseBody(const char* buf, int64_t size, int64_t recvedSize, int64_t totalSize) override;
+		void    onResponseCompleted() override;
+		void    onDisconnect(const SockException& ex) override;
+
+	    private:
+		string		    _strRecvBody;
+		HttpRequesterResult _onResult;
+	};
+
+} // namespace mediakit
 
 #endif /* Htt_HttpRequester_h */

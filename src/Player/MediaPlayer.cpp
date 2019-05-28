@@ -32,40 +32,43 @@ using namespace toolkit;
 
 namespace mediakit {
 
-MediaPlayer::MediaPlayer(const EventPoller::Ptr &poller) {
-    _poller = poller;
-    if(!_poller){
-        _poller = EventPollerPool::Instance().getPoller();
-    }
-}
-
-MediaPlayer::~MediaPlayer() {
-}
-void MediaPlayer::play(const string &strUrl) {
-	_parser = PlayerBase::createPlayer(_poller,strUrl);
-	_parser->setOnShutdown(_shutdownCB);
-	_parser->setOnPlayResult(_playResultCB);
-    _parser->setOnResume(_resumeCB);
-    _parser->setMediaSouce(_pMediaSrc);
-	_parser->mINI::operator=(*this);
-	_parser->play(strUrl);
-}
-
-EventPoller::Ptr MediaPlayer::getPoller(){
-	return _poller;
-}
-
-void MediaPlayer::pause(bool bPause) {
-	if (_parser) {
-		_parser->pause(bPause);
+	MediaPlayer::MediaPlayer(const EventPoller::Ptr& poller)
+	{
+		_poller = poller;
+		if (!_poller) {
+			_poller = EventPollerPool::Instance().getPoller();
+		}
 	}
-}
 
-void MediaPlayer::teardown() {
-	if (_parser) {
-		_parser->teardown();
+	MediaPlayer::~MediaPlayer() {}
+	void MediaPlayer::play(const string& strUrl)
+	{
+		_parser = PlayerBase::createPlayer(_poller, strUrl);
+		_parser->setOnShutdown(_shutdownCB);
+		_parser->setOnPlayResult(_playResultCB);
+		_parser->setOnResume(_resumeCB);
+		_parser->setMediaSouce(_pMediaSrc);
+		_parser->mINI::operator=(*this);
+		_parser->play(strUrl);
 	}
-}
 
+	EventPoller::Ptr MediaPlayer::getPoller()
+	{
+		return _poller;
+	}
+
+	void MediaPlayer::pause(bool bPause)
+	{
+		if (_parser) {
+			_parser->pause(bPause);
+		}
+	}
+
+	void MediaPlayer::teardown()
+	{
+		if (_parser) {
+			_parser->teardown();
+		}
+	}
 
 } /* namespace mediakit */

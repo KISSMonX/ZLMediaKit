@@ -31,69 +31,68 @@
 #include "RtmpMuxer/RtmpMediaSourceMuxer.h"
 #include "MediaFile/MediaRecorder.h"
 
-class MultiMediaSourceMuxer : public FrameWriterInterface{
-public:
-    typedef std::shared_ptr<MultiMediaSourceMuxer> Ptr;
+class MultiMediaSourceMuxer : public FrameWriterInterface {
+    public:
+	typedef std::shared_ptr<MultiMediaSourceMuxer> Ptr;
 
-    MultiMediaSourceMuxer(const string &vhost,
-                          const string &strApp,
-                          const string &strId,
-                          float dur_sec = 0.0,
-                          bool bEanbleHls = true,
-                          bool bEnableMp4 = false){
-        _rtmp = std::make_shared<RtmpMediaSourceMuxer>(vhost,strApp,strId,std::make_shared<TitleMete>(dur_sec));
-        _rtsp = std::make_shared<RtspMediaSourceMuxer>(vhost,strApp,strId,std::make_shared<TitleSdp>(dur_sec));
-        _record = std::make_shared<MediaRecorder>(vhost,strApp,strId,bEanbleHls,bEnableMp4);
+	MultiMediaSourceMuxer(const string& vhost, const string& strApp, const string& strId, float dur_sec = 0.0, bool bEanbleHls = true, bool bEnableMp4 = false)
+	{
+		_rtmp   = std::make_shared<RtmpMediaSourceMuxer>(vhost, strApp, strId, std::make_shared<TitleMete>(dur_sec));
+		_rtsp   = std::make_shared<RtspMediaSourceMuxer>(vhost, strApp, strId, std::make_shared<TitleSdp>(dur_sec));
+		_record = std::make_shared<MediaRecorder>(vhost, strApp, strId, bEanbleHls, bEnableMp4);
+	}
+	virtual ~MultiMediaSourceMuxer() {}
 
-    }
-    virtual ~MultiMediaSourceMuxer(){}
+	/**
+	 * 添加音视频媒体
+	 * @param track 媒体描述
+	 */
+	void addTrack(const Track::Ptr& track)
+	{
+		_rtmp->addTrack(track);
+		_rtsp->addTrack(track);
+		_record->addTrack(track);
+	}
 
+	/**
+	 * 写入帧数据然后打包rtmp
+	 * @param frame 帧数据
+	 */
+	void inputFrame(const Frame::Ptr& frame) override
+	{
+		_rtmp->inputFrame(frame);
+		_rtsp->inputFrame(frame);
+		_record->inputFrame(frame);
+	}
 
-    /**
-     * 添加音视频媒体
-     * @param track 媒体描述
-     */
-    void addTrack(const Track::Ptr & track) {
-        _rtmp->addTrack(track);
-        _rtsp->addTrack(track);
-        _record->addTrack(track);
-    }
+	/**
+	 * 设置事件监听器
+	 * @param listener
+	 */
+	void setListener(const std::weak_ptr<MediaSourceEvent>& listener)
+	{
+		_rtmp->setListener(listener);
+		_rtsp->setListener(listener);
+	}
 
-    /**
-     * 写入帧数据然后打包rtmp
-     * @param frame 帧数据
-     */
-    void inputFrame(const Frame::Ptr &frame) override {
-        _rtmp->inputFrame(frame);
-        _rtsp->inputFrame(frame);
-        _record->inputFrame(frame);
-    }
+	/**
+	 * 返回总的消费者个数
+	 * @return
+	 */
+	int readerCount() const
+	{
+		return _rtsp->readerCount() + _rtmp->readerCount();
+	}
 
-    /**
-     * 设置事件监听器
-     * @param listener
-     */
-    void setListener(const std::weak_ptr<MediaSourceEvent> &listener){
-        _rtmp->setListener(listener);
-        _rtsp->setListener(listener);
-    }
+	void setTimeStamp(uint32_t stamp)
+	{
+		_rtsp->setTimeStamp(stamp);
+	}
 
-    /**
-     * 返回总的消费者个数
-     * @return
-     */
-    int readerCount() const{
-        return _rtsp->readerCount() + _rtmp->readerCount();
-    }
-
-    void setTimeStamp(uint32_t stamp){
-        _rtsp->setTimeStamp(stamp);
-    }
-private:
-    RtmpMediaSourceMuxer::Ptr _rtmp;
-    RtspMediaSourceMuxer::Ptr _rtsp;
-    MediaRecorder::Ptr _record;
+    private:
+	RtmpMediaSourceMuxer::Ptr _rtmp;
+	RtspMediaSourceMuxer::Ptr _rtsp;
+	MediaRecorder::Ptr	_record;
 };
 
-
-#endif //ZLMEDIAKIT_MULTIMEDIASOURCEMUXER_H
+#endif // ZLMEDIAKIT_MULTIMEDIASOURCEMUXER_H

@@ -27,77 +27,79 @@
 #include "HlsMaker.h"
 namespace mediakit {
 
-HlsMaker::HlsMaker(float seg_duration, uint32_t seg_number) {
-    seg_number = MAX(1,seg_number);
-    seg_duration = MAX(1,seg_duration);
-    _seg_number = seg_number;
-    _seg_duration = seg_duration;
-}
+	HlsMaker::HlsMaker(float seg_duration, uint32_t seg_number)
+	{
+		seg_number    = MAX(1, seg_number);
+		seg_duration  = MAX(1, seg_duration);
+		_seg_number   = seg_number;
+		_seg_duration = seg_duration;
+	}
 
-HlsMaker::~HlsMaker() {
-}
+	HlsMaker::~HlsMaker() {}
 
-#define PRINT(...)  file_size += snprintf(file_content + file_size,sizeof(file_content) - file_size, ##__VA_ARGS__)
+#define PRINT(...) file_size += snprintf(file_content + file_size, sizeof(file_content) - file_size, ##__VA_ARGS__)
 
-void HlsMaker::makeIndexFile(bool eof) {
-    char file_content[4 * 1024];
-    int file_size = 0;
+	void HlsMaker::makeIndexFile(bool eof)
+	{
+		char file_content[4 * 1024];
+		int  file_size = 0;
 
-    int maxSegmentDuration = 0;
-    for (auto &tp : _seg_dur_list) {
-        int dur = std::get<0>(tp);
-        if (dur > maxSegmentDuration) {
-            maxSegmentDuration = dur;
-        }
-    }
-    PRINT("#EXTM3U\n"
-          "#EXT-X-VERSION:3\n"
-          "#EXT-X-ALLOW-CACHE:NO\n"
-          "#EXT-X-TARGETDURATION:%u\n"
-          "#EXT-X-MEDIA-SEQUENCE:%llu\n",
-          (maxSegmentDuration + 999) / 1000,
-          _file_index);
+		int maxSegmentDuration = 0;
+		for (auto& tp : _seg_dur_list) {
+			int dur = std::get<0>(tp);
+			if (dur > maxSegmentDuration) {
+				maxSegmentDuration = dur;
+			}
+		}
+		PRINT("#EXTM3U\n"
+		      "#EXT-X-VERSION:3\n"
+		      "#EXT-X-ALLOW-CACHE:NO\n"
+		      "#EXT-X-TARGETDURATION:%u\n"
+		      "#EXT-X-MEDIA-SEQUENCE:%llu\n",
+		      (maxSegmentDuration + 999) / 1000, _file_index);
 
-    for (auto &tp : _seg_dur_list) {
-        PRINT("#EXTINF:%.3f,\n%s\n", std::get<0>(tp) / 1000.0, std::get<1>(tp).data());
-    }
+		for (auto& tp : _seg_dur_list) {
+			PRINT("#EXTINF:%.3f,\n%s\n", std::get<0>(tp) / 1000.0, std::get<1>(tp).data());
+		}
 
-    if (eof) {
-        PRINT("#EXT-X-ENDLIST\n");
-    }
-    onWriteHls(file_content, file_size);
-}
+		if (eof) {
+			PRINT("#EXT-X-ENDLIST\n");
+		}
+		onWriteHls(file_content, file_size);
+	}
 
+	void HlsMaker::inputData(void* data, uint32_t len, uint32_t timestamp)
+	{
+		addNewFile(timestamp);
+		onWriteFile((char*)data, len);
+	}
 
-void HlsMaker::inputData(void *data, uint32_t len, uint32_t timestamp) {
-    addNewFile(timestamp);
-    onWriteFile((char *) data, len);
-}
+	void HlsMaker::delOldFile()
+	{
+		//在hls m3u8索引文件中,我们保存的切片个数跟_seg_number相关设置一致
+		if (_file_index >= _seg_number + 2) {
+			_seg_dur_list.pop_front();
+		}
 
-void HlsMaker::delOldFile() {
-    //在hls m3u8索引文件中,我们保存的切片个数跟_seg_number相关设置一致
-    if (_file_index >= _seg_number + 2) {
-        _seg_dur_list.pop_front();
-    }
+		//但是实际保存的切片个数比m3u8所述多两个,这样做的目的是防止播放器在切片删除前能下载完毕
+		if (_file_index >= _seg_number + 4) {
+			onDelFile(_file_index - _seg_number - 4);
+		}
+	}
 
-    //但是实际保存的切片个数比m3u8所述多两个,这样做的目的是防止播放器在切片删除前能下载完毕
-    if (_file_index >= _seg_number + 4) {
-        onDelFile(_file_index - _seg_number - 4);
-    }
-}
+	void HlsMaker::addNewFile(uint32_t)
+	{
+		int stampInc = _ticker.elapsedTime();
+		if (stampInc >= _seg_duration * 1000) {
+			_ticker.resetTime();
+			auto file_name = onOpenFile(_file_index);
+			if (_file_index++ > 0) {
+				_seg_dur_list.push_back(std::make_tuple(stampInc, _last_file_name));
+				delOldFile();
+				makeIndexFile();
+			}
+			_last_file_name = file_name;
+		}
+	}
 
-void HlsMaker::addNewFile(uint32_t) {
-    int stampInc = _ticker.elapsedTime();
-    if (stampInc >= _seg_duration * 1000) {
-        _ticker.resetTime();
-        auto file_name = onOpenFile(_file_index);
-        if (_file_index++ > 0) {
-            _seg_dur_list.push_back(std::make_tuple(stampInc, _last_file_name));
-            delOldFile();
-            makeIndexFile();
-        }
-        _last_file_name = file_name;
-    }
-}
-
-}//namespace mediakit
+} // namespace mediakit

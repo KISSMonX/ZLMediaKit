@@ -34,14 +34,15 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class HttpClientImp: public TcpClientWithSSL<HttpClient> {
-public:
-	typedef std::shared_ptr<HttpClientImp> Ptr;
-	HttpClientImp() {}
-	virtual ~HttpClientImp() {}
-protected:
-	void onConnect(const SockException &ex)  override ;
-};
+	class HttpClientImp : public TcpClientWithSSL<HttpClient> {
+	    public:
+		typedef std::shared_ptr<HttpClientImp> Ptr;
+		HttpClientImp() {}
+		virtual ~HttpClientImp() {}
+
+	    protected:
+		void onConnect(const SockException& ex) override;
+	};
 
 } /* namespace mediakit */
 

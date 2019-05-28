@@ -38,61 +38,64 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class HlsMaker {
-public:
-    /**
-     * @param seg_duration 切片文件长度
-     * @param seg_number 切片个数
-     */
-    HlsMaker(float seg_duration = 5, uint32_t seg_number = 3);
-    virtual ~HlsMaker();
+	class HlsMaker {
+	    public:
+		/**
+		 * @param seg_duration 切片文件长度
+		 * @param seg_number 切片个数
+		 */
+		HlsMaker(float seg_duration = 5, uint32_t seg_number = 3);
+		virtual ~HlsMaker();
 
-    /**
-     * 写入ts数据
-     * @param data 数据
-     * @param len 数据长度
-     * @param timestamp 毫秒时间戳
-     */
-    void inputData(void *data, uint32_t len, uint32_t timestamp);
-protected:
-    /**
-     * 创建ts切片文件回调
-     * @param index
-     * @return
-     */
-    virtual string onOpenFile(int index) = 0;
+		/**
+		 * 写入ts数据
+		 * @param data 数据
+		 * @param len 数据长度
+		 * @param timestamp 毫秒时间戳
+		 */
+		void inputData(void* data, uint32_t len, uint32_t timestamp);
 
-    /**
-     * 删除ts切片文件回调
-     * @param index
-     */
-    virtual void onDelFile(int index) = 0;
+	    protected:
+		/**
+		 * 创建ts切片文件回调
+		 * @param index
+		 * @return
+		 */
+		virtual string onOpenFile(int index) = 0;
 
-    /**
-     * 写ts切片文件回调
-     * @param data
-     * @param len
-     */
-    virtual void onWriteFile(const char *data, int len) = 0;
+		/**
+		 * 删除ts切片文件回调
+		 * @param index
+		 */
+		virtual void onDelFile(int index) = 0;
 
-    /**
-     * 写m3u8文件回调
-     * @param data
-     * @param len
-     */
-    virtual void onWriteHls(const char *data, int len) = 0;
-private:
-    void delOldFile();
-    void addNewFile(uint32_t timestamp);
-    void makeIndexFile(bool eof = false);
-private:
-    float _seg_duration = 0;
-    uint32_t _seg_number = 0;
-    uint64_t _file_index = 0;
-    Ticker _ticker;
-    string _last_file_name;
-    std::deque<tuple<int,string> > _seg_dur_list;
-};
+		/**
+		 * 写ts切片文件回调
+		 * @param data
+		 * @param len
+		 */
+		virtual void onWriteFile(const char* data, int len) = 0;
 
-}//namespace mediakit
-#endif //HLSMAKER_H
+		/**
+		 * 写m3u8文件回调
+		 * @param data
+		 * @param len
+		 */
+		virtual void onWriteHls(const char* data, int len) = 0;
+
+	    private:
+		void delOldFile();
+		void addNewFile(uint32_t timestamp);
+		void makeIndexFile(bool eof = false);
+
+	    private:
+		float			       _seg_duration = 0;
+		uint32_t		       _seg_number   = 0;
+		uint64_t		       _file_index   = 0;
+		Ticker			       _ticker;
+		string			       _last_file_name;
+		std::deque<tuple<int, string>> _seg_dur_list;
+	};
+
+} // namespace mediakit
+#endif // HLSMAKER_H

@@ -32,36 +32,40 @@
 
 namespace mediakit {
 
-class RtspMediaSourceMuxer : public RtspMuxer {
-public:
-    typedef std::shared_ptr<RtspMediaSourceMuxer> Ptr;
+	class RtspMediaSourceMuxer : public RtspMuxer {
+	    public:
+		typedef std::shared_ptr<RtspMediaSourceMuxer> Ptr;
 
-    RtspMediaSourceMuxer(const string &vhost,
-                         const string &strApp,
-                         const string &strId,
-                         const TitleSdp::Ptr &title = nullptr) : RtspMuxer(title){
-        _mediaSouce = std::make_shared<RtspMediaSource>(vhost,strApp,strId);
-        getRtpRing()->setDelegate(_mediaSouce);
-    }
-    virtual ~RtspMediaSourceMuxer(){}
+		RtspMediaSourceMuxer(const string& vhost, const string& strApp, const string& strId, const TitleSdp::Ptr& title = nullptr)
+			: RtspMuxer(title)
+		{
+			_mediaSouce = std::make_shared<RtspMediaSource>(vhost, strApp, strId);
+			getRtpRing()->setDelegate(_mediaSouce);
+		}
+		virtual ~RtspMediaSourceMuxer() {}
 
-    void setListener(const std::weak_ptr<MediaSourceEvent> &listener){
-        _mediaSouce->setListener(listener);
-    }
-    int readerCount() const{
-        return _mediaSouce->getRing()->readerCount();
-    }
-    void setTimeStamp(uint32_t stamp){
-        _mediaSouce->setTimeStamp(stamp);
-    }
-private:
-    void onAllTrackReady() override {
-        _mediaSouce->onGetSDP(getSdp());
-    }
-private:
-    RtspMediaSource::Ptr _mediaSouce;
-};
+		void setListener(const std::weak_ptr<MediaSourceEvent>& listener)
+		{
+			_mediaSouce->setListener(listener);
+		}
+		int readerCount() const
+		{
+			return _mediaSouce->getRing()->readerCount();
+		}
+		void setTimeStamp(uint32_t stamp)
+		{
+			_mediaSouce->setTimeStamp(stamp);
+		}
 
+	    private:
+		void onAllTrackReady() override
+		{
+			_mediaSouce->onGetSDP(getSdp());
+		}
 
-}//namespace mediakit
-#endif //ZLMEDIAKIT_RTSPMEDIASOURCEMUXER_H
+	    private:
+		RtspMediaSource::Ptr _mediaSouce;
+	};
+
+} // namespace mediakit
+#endif // ZLMEDIAKIT_RTSPMEDIASOURCEMUXER_H

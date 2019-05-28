@@ -31,70 +31,73 @@
 #include "Extension/Track.h"
 #include "Extension/AAC.h"
 
-namespace mediakit{
-/**
- * aac Rtmp转adts类
- */
-class AACRtmpDecoder : public RtmpCodec , public ResourcePoolHelper<AACFrame> {
-public:
-    typedef std::shared_ptr<AACRtmpDecoder> Ptr;
+namespace mediakit {
+	/**
+	 * aac Rtmp转adts类
+	 */
+	class AACRtmpDecoder : public RtmpCodec, public ResourcePoolHelper<AACFrame> {
+	    public:
+		typedef std::shared_ptr<AACRtmpDecoder> Ptr;
 
-    AACRtmpDecoder();
-    ~AACRtmpDecoder() {}
+		AACRtmpDecoder();
+		~AACRtmpDecoder() {}
 
-    /**
-     * 输入Rtmp并解码
-     * @param Rtmp Rtmp数据包
-     * @param key_pos 此参数内部强制转换为false,请忽略之
-     */
-    bool inputRtmp(const RtmpPacket::Ptr &Rtmp, bool key_pos = false) override;
+		/**
+		 * 输入Rtmp并解码
+		 * @param Rtmp Rtmp数据包
+		 * @param key_pos 此参数内部强制转换为false,请忽略之
+		 */
+		bool inputRtmp(const RtmpPacket::Ptr& Rtmp, bool key_pos = false) override;
 
-    TrackType getTrackType() const override{
-        return TrackAudio;
-    }
+		TrackType getTrackType() const override
+		{
+			return TrackAudio;
+		}
 
-    CodecId getCodecId() const override{
-        return CodecAAC;
-    }
+		CodecId getCodecId() const override
+		{
+			return CodecAAC;
+		}
 
-protected:
-    void onGetAAC(const char* pcData, int iLen, uint32_t ui32TimeStamp);
-    AACFrame::Ptr obtainFrame();
-protected:
-    AACFrame::Ptr _adts;
-    string _aac_cfg;
-};
+	    protected:
+		void	  onGetAAC(const char* pcData, int iLen, uint32_t ui32TimeStamp);
+		AACFrame::Ptr obtainFrame();
 
+	    protected:
+		AACFrame::Ptr _adts;
+		string	_aac_cfg;
+	};
 
-/**
- * aac adts转Rtmp类
- */
-class AACRtmpEncoder : public AACRtmpDecoder ,  public ResourcePoolHelper<RtmpPacket> {
-public:
-    typedef std::shared_ptr<AACRtmpEncoder> Ptr;
+	/**
+	 * aac adts转Rtmp类
+	 */
+	class AACRtmpEncoder : public AACRtmpDecoder, public ResourcePoolHelper<RtmpPacket> {
+	    public:
+		typedef std::shared_ptr<AACRtmpEncoder> Ptr;
 
-    /**
-     * 构造函数，track可以为空，此时则在inputFrame时输入adts头
-     * 如果track不为空且包含adts头相关信息，
-     * 那么inputFrame时可以不输入adts头
-     * @param track
-     */
-    AACRtmpEncoder(const Track::Ptr &track);
-    ~AACRtmpEncoder() {}
+		/**
+		 * 构造函数，track可以为空，此时则在inputFrame时输入adts头
+		 * 如果track不为空且包含adts头相关信息，
+		 * 那么inputFrame时可以不输入adts头
+		 * @param track
+		 */
+		AACRtmpEncoder(const Track::Ptr& track);
+		~AACRtmpEncoder() {}
 
-    /**
-     * 输入aac 数据，可以不带adts头
-     * @param frame aac数据
-     */
-    void inputFrame(const Frame::Ptr &frame) override;
+		/**
+		 * 输入aac 数据，可以不带adts头
+		 * @param frame aac数据
+		 */
+		void inputFrame(const Frame::Ptr& frame) override;
 
-private:
-    void makeAudioConfigPkt();
-private:
-    uint8_t _ui8AudioFlags;
-    AACTrack::Ptr _track;
-};
+	    private:
+		void makeAudioConfigPkt();
 
-}//namespace mediakit
+	    private:
+		uint8_t       _ui8AudioFlags;
+		AACTrack::Ptr _track;
+	};
 
-#endif //ZLMEDIAKIT_AACRTMPCODEC_H
+} // namespace mediakit
+
+#endif // ZLMEDIAKIT_AACRTMPCODEC_H

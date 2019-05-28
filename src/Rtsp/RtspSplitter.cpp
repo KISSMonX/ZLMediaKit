@@ -27,63 +27,64 @@
 #include <cstdlib>
 #include "RtspSplitter.h"
 
-namespace mediakit{
+namespace mediakit {
 
-const char *RtspSplitter::onSearchPacketTail(const char *data, int len) {
-    if(!_enableRecvRtp){
-        _isRtpPacket = false;
-        return HttpRequestSplitter::onSearchPacketTail(data, len);
-    }
-    if(data[0] != '$'){
-        //这是rtsp包
-        _isRtpPacket = false;
-        return HttpRequestSplitter::onSearchPacketTail(data, len);
-    }
-    //这是rtp包
-    if(len < 4){
-        //数据不够
-        return nullptr;
-    }
-    uint16_t length = (((uint8_t *)data)[2] << 8) | ((uint8_t *)data)[3];
-    if(len < length + 4){
-        //数据不够
-        return nullptr;
-    }
-    //返回rtp包末尾
-    _isRtpPacket = true;
-    return data + 4 + length;
-}
+	const char* RtspSplitter::onSearchPacketTail(const char* data, int len)
+	{
+		if (!_enableRecvRtp) {
+			_isRtpPacket = false;
+			return HttpRequestSplitter::onSearchPacketTail(data, len);
+		}
+		if (data[0] != '$') {
+			//这是rtsp包
+			_isRtpPacket = false;
+			return HttpRequestSplitter::onSearchPacketTail(data, len);
+		}
+		//这是rtp包
+		if (len < 4) {
+			//数据不够
+			return nullptr;
+		}
+		uint16_t length = (((uint8_t*)data)[2] << 8) | ((uint8_t*)data)[3];
+		if (len < length + 4) {
+			//数据不够
+			return nullptr;
+		}
+		//返回rtp包末尾
+		_isRtpPacket = true;
+		return data + 4 + length;
+	}
 
-int64_t RtspSplitter::onRecvHeader(const char *data, uint64_t len) {
-    if(_isRtpPacket){
-        onRtpPacket(data,len);
-        return 0;
-    }
-    _parser.Parse(data);
-    auto ret = getContentLength(_parser);
-    if(ret == 0){
-        onWholeRtspPacket(_parser);
-        _parser.Clear();
-    }
-    return ret;
-}
+	int64_t RtspSplitter::onRecvHeader(const char* data, uint64_t len)
+	{
+		if (_isRtpPacket) {
+			onRtpPacket(data, len);
+			return 0;
+		}
+		_parser.Parse(data);
+		auto ret = getContentLength(_parser);
+		if (ret == 0) {
+			onWholeRtspPacket(_parser);
+			_parser.Clear();
+		}
+		return ret;
+	}
 
-void RtspSplitter::onRecvContent(const char *data, uint64_t len) {
-    _parser.setContent(string(data,len));
-    onWholeRtspPacket(_parser);
-    _parser.Clear();
-}
+	void RtspSplitter::onRecvContent(const char* data, uint64_t len)
+	{
+		_parser.setContent(string(data, len));
+		onWholeRtspPacket(_parser);
+		_parser.Clear();
+	}
 
-void RtspSplitter::enableRecvRtp(bool enable) {
-    _enableRecvRtp = enable;
-}
+	void RtspSplitter::enableRecvRtp(bool enable)
+	{
+		_enableRecvRtp = enable;
+	}
 
-int64_t RtspSplitter::getContentLength(Parser &parser) {
-    return atoi(parser["Content-Length"].data());
-}
+	int64_t RtspSplitter::getContentLength(Parser& parser)
+	{
+		return atoi(parser["Content-Length"].data());
+	}
 
-
-}//namespace mediakit
-
-
-
+} // namespace mediakit

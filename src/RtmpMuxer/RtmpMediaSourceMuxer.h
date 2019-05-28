@@ -32,38 +32,36 @@
 
 namespace mediakit {
 
-class RtmpMediaSourceMuxer : public RtmpMuxer {
-public:
-    typedef std::shared_ptr<RtmpMediaSourceMuxer> Ptr;
+	class RtmpMediaSourceMuxer : public RtmpMuxer {
+	    public:
+		typedef std::shared_ptr<RtmpMediaSourceMuxer> Ptr;
 
-    RtmpMediaSourceMuxer(const string &vhost,
-                         const string &strApp,
-                         const string &strId,
-                         const TitleMete::Ptr &title = nullptr) : RtmpMuxer(title){
-        _mediaSouce = std::make_shared<RtmpMediaSource>(vhost,strApp,strId);
-        getRtmpRing()->setDelegate(_mediaSouce);
-    }
-    virtual ~RtmpMediaSourceMuxer(){}
+		RtmpMediaSourceMuxer(const string& vhost, const string& strApp, const string& strId, const TitleMete::Ptr& title = nullptr)
+			: RtmpMuxer(title)
+		{
+			_mediaSouce = std::make_shared<RtmpMediaSource>(vhost, strApp, strId);
+			getRtmpRing()->setDelegate(_mediaSouce);
+		}
+		virtual ~RtmpMediaSourceMuxer() {}
 
-    void setListener(const std::weak_ptr<MediaSourceEvent> &listener){
-        _mediaSouce->setListener(listener);
-    }
-    int readerCount() const{
-        return _mediaSouce->getRing()->readerCount();
-    }
-private:
-    void onAllTrackReady() override {
-        _mediaSouce->onGetMetaData(getMetedata());
-    }
-private:
-    RtmpMediaSource::Ptr _mediaSouce;
-};
+		void setListener(const std::weak_ptr<MediaSourceEvent>& listener)
+		{
+			_mediaSouce->setListener(listener);
+		}
+		int readerCount() const
+		{
+			return _mediaSouce->getRing()->readerCount();
+		}
 
+	    private:
+		void onAllTrackReady() override
+		{
+			_mediaSouce->onGetMetaData(getMetedata());
+		}
 
+	    private:
+		RtmpMediaSource::Ptr _mediaSouce;
+	};
 
-
-
-
-
-}//namespace mediakit
-#endif //ZLMEDIAKIT_RTMPMEDIASOURCEMUXER_H
+} // namespace mediakit
+#endif // ZLMEDIAKIT_RTMPMEDIASOURCEMUXER_H

@@ -27,7 +27,6 @@
 #ifndef ZLMEDIAKIT_RTPRECEIVER_H
 #define ZLMEDIAKIT_RTPRECEIVER_H
 
-
 #include <map>
 #include <string>
 #include <memory>
@@ -40,44 +39,44 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class RtpReceiver {
-public:
-    RtpReceiver();
-    virtual ~RtpReceiver();
-protected:
+	class RtpReceiver {
+	    public:
+		RtpReceiver();
+		virtual ~RtpReceiver();
 
-    /**
-     * 输入数据指针生成并排序rtp包
-     * @param iTrackidx track下标索引
-     * @param track  sdp track相关信息
-     * @param pucData rtp数据指针
-     * @param uiLen rtp数据指针长度
-     * @return 解析成功返回true
-     */
-    bool handleOneRtp(int iTrackidx,SdpTrack::Ptr &track, unsigned char *pucData, unsigned int uiLen);
+	    protected:
+		/**
+		 * 输入数据指针生成并排序rtp包
+		 * @param iTrackidx track下标索引
+		 * @param track  sdp track相关信息
+		 * @param pucData rtp数据指针
+		 * @param uiLen rtp数据指针长度
+		 * @return 解析成功返回true
+		 */
+		bool handleOneRtp(int iTrackidx, SdpTrack::Ptr& track, unsigned char* pucData, unsigned int uiLen);
 
-    /**
-     * rtp数据包排序后输出
-     * @param rtppt rtp数据包
-     * @param trackidx track索引
-     */
-    virtual void onRtpSorted(const RtpPacket::Ptr &rtppt, int trackidx){}
-    void clear();
-    void setPoolSize(int size);
-    int getJitterSize(int iTrackidx);
-    int getCycleCount(int iTrackidx);
-private:
-    uint32_t _aui32SsrcErrorCnt[2] = { 0, 0 };
-    /* RTP包排序所用参数 */
-    uint16_t _aui16LastSeq[2] = { 0 , 0 };
-    uint32_t _aui32SeqOkCnt[2] = { 0 , 0};
-    uint32_t _clcyeCount[2] = { 0 , 0};
-    bool _abSortStarted[2] = { 0 , 0};
-    map<uint16_t , RtpPacket::Ptr> _amapRtpSort[2];
-    RtspMediaSource::PoolType _pktPool;
-};
+		/**
+		 * rtp数据包排序后输出
+		 * @param rtppt rtp数据包
+		 * @param trackidx track索引
+		 */
+		virtual void onRtpSorted(const RtpPacket::Ptr& rtppt, int trackidx) {}
+		void	 clear();
+		void	 setPoolSize(int size);
+		int	  getJitterSize(int iTrackidx);
+		int	  getCycleCount(int iTrackidx);
 
-}//namespace mediakit
+	    private:
+		uint32_t _aui32SsrcErrorCnt[2] = {0, 0};
+		/* RTP包排序所用参数 */
+		uint16_t		      _aui16LastSeq[2]  = {0, 0};
+		uint32_t		      _aui32SeqOkCnt[2] = {0, 0};
+		uint32_t		      _clcyeCount[2]    = {0, 0};
+		bool			      _abSortStarted[2] = {0, 0};
+		map<uint16_t, RtpPacket::Ptr> _amapRtpSort[2];
+		RtspMediaSource::PoolType     _pktPool;
+	};
 
+} // namespace mediakit
 
-#endif //ZLMEDIAKIT_RTPRECEIVER_H
+#endif // ZLMEDIAKIT_RTPRECEIVER_H

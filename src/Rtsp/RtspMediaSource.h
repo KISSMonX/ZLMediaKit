@@ -49,83 +49,96 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class RtspMediaSource: public MediaSource , public RingDelegate<RtpPacket::Ptr> {
-public:
-	typedef ResourcePool<RtpPacket> PoolType;
-	typedef std::shared_ptr<RtspMediaSource> Ptr;
-	typedef RingBuffer<RtpPacket::Ptr> RingType;
+	class RtspMediaSource : public MediaSource, public RingDelegate<RtpPacket::Ptr> {
+	    public:
+		typedef ResourcePool<RtpPacket>		 PoolType;
+		typedef std::shared_ptr<RtspMediaSource> Ptr;
+		typedef RingBuffer<RtpPacket::Ptr>       RingType;
 
-	RtspMediaSource(const string &strVhost,const string &strApp, const string &strId,int ringSize = 0) :
-			MediaSource(RTSP_SCHEMA,strVhost,strApp,strId),
-			_pRing(new RingBuffer<RtpPacket::Ptr>(ringSize)) {
-	}
-	virtual ~RtspMediaSource() {}
-
-	const RingType::Ptr &getRing() const {
-		//获取媒体源的rtp环形缓冲
-		return _pRing;
-	}
-	const string& getSdp() const {
-		//获取该源的媒体描述信息
-		return _strSdp;
-	}
-
-	virtual uint32_t getSsrc(TrackType trackType) {
-		auto track = _sdpAttr.getTrack(trackType);
-		if(!track){
-			return 0;
+		RtspMediaSource(const string& strVhost, const string& strApp, const string& strId, int ringSize = 0)
+			: MediaSource(RTSP_SCHEMA, strVhost, strApp, strId)
+			, _pRing(new RingBuffer<RtpPacket::Ptr>(ringSize))
+		{
 		}
-		return track->_ssrc;
-	}
-	virtual uint16_t getSeqence(TrackType trackType) {
-		auto track = _sdpAttr.getTrack(trackType);
-		if(!track){
-			return 0;
-		}
-		return track->_seq;
-	}
+		virtual ~RtspMediaSource() {}
 
-	uint32_t getTimeStamp(TrackType trackType) override {
-		auto track = _sdpAttr.getTrack(trackType);
-		if(track) {
-			return track->_time_stamp;
+		const RingType::Ptr& getRing() const
+		{
+			//获取媒体源的rtp环形缓冲
+			return _pRing;
 		}
-		auto tracks = _sdpAttr.getAvailableTrack();
-		switch (tracks.size()){
-			case 0: return 0;
-			case 1: return tracks[0]->_time_stamp;
-			default:return MAX(tracks[0]->_time_stamp,tracks[1]->_time_stamp);
+		const string& getSdp() const
+		{
+			//获取该源的媒体描述信息
+			return _strSdp;
 		}
-	}
 
-	virtual void setTimeStamp(uint32_t uiStamp) {
-		auto tracks = _sdpAttr.getAvailableTrack();
-		for (auto &track : tracks) {
-			track->_time_stamp  = uiStamp;
+		virtual uint32_t getSsrc(TrackType trackType)
+		{
+			auto track = _sdpAttr.getTrack(trackType);
+			if (!track) {
+				return 0;
+			}
+			return track->_ssrc;
 		}
-	}
-
-	virtual void onGetSDP(const string& sdp) {
-		//派生类设置该媒体源媒体描述信息
-		_strSdp = sdp;
-		_sdpAttr.load(sdp);
-		regist();
-	}
-
-	void onWrite(const RtpPacket::Ptr &rtppt, bool keyPos) override {
-		auto track = _sdpAttr.getTrack(rtppt->type);
-		if(track){
-			track->_seq = rtppt->sequence;
-			track->_time_stamp = rtppt->timeStamp;
-			track->_ssrc = rtppt->ssrc;
+		virtual uint16_t getSeqence(TrackType trackType)
+		{
+			auto track = _sdpAttr.getTrack(trackType);
+			if (!track) {
+				return 0;
+			}
+			return track->_seq;
 		}
-		_pRing->write(rtppt,keyPos);
-	}
-protected:
-	SdpAttr _sdpAttr;
-    string _strSdp; //媒体描述信息
-    RingType::Ptr _pRing; //rtp环形缓冲
-};
+
+		uint32_t getTimeStamp(TrackType trackType) override
+		{
+			auto track = _sdpAttr.getTrack(trackType);
+			if (track) {
+				return track->_time_stamp;
+			}
+			auto tracks = _sdpAttr.getAvailableTrack();
+			switch (tracks.size()) {
+			case 0:
+				return 0;
+			case 1:
+				return tracks[0]->_time_stamp;
+			default:
+				return MAX(tracks[0]->_time_stamp, tracks[1]->_time_stamp);
+			}
+		}
+
+		virtual void setTimeStamp(uint32_t uiStamp)
+		{
+			auto tracks = _sdpAttr.getAvailableTrack();
+			for (auto& track : tracks) {
+				track->_time_stamp = uiStamp;
+			}
+		}
+
+		virtual void onGetSDP(const string& sdp)
+		{
+			//派生类设置该媒体源媒体描述信息
+			_strSdp = sdp;
+			_sdpAttr.load(sdp);
+			regist();
+		}
+
+		void onWrite(const RtpPacket::Ptr& rtppt, bool keyPos) override
+		{
+			auto track = _sdpAttr.getTrack(rtppt->type);
+			if (track) {
+				track->_seq	= rtppt->sequence;
+				track->_time_stamp = rtppt->timeStamp;
+				track->_ssrc       = rtppt->ssrc;
+			}
+			_pRing->write(rtppt, keyPos);
+		}
+
+	    protected:
+		SdpAttr       _sdpAttr;
+		string	_strSdp; //媒体描述信息
+		RingType::Ptr _pRing;  // rtp环形缓冲
+	};
 
 } /* namespace mediakit */
 

@@ -40,54 +40,62 @@ using namespace mediakit::Client;
 
 namespace mediakit {
 
-class RtmpPlayerImp: public PlayerImp<RtmpPlayer,RtmpDemuxer> {
-public:
-    typedef std::shared_ptr<RtmpPlayerImp> Ptr;
-    RtmpPlayerImp(const EventPoller::Ptr &poller) : PlayerImp<RtmpPlayer,RtmpDemuxer>(poller){};
-    virtual ~RtmpPlayerImp(){
-        DebugL<<endl;
-    };
-    float getProgress() const override{
-        if(getDuration() > 0){
-            return getProgressMilliSecond() / (getDuration() * 1000);
-        }
-        return PlayerBase::getProgress();
-    };
-    void seekTo(float fProgress) override{
-        fProgress = MAX(float(0),MIN(fProgress,float(1.0)));
-        seekToMilliSecond(fProgress * getDuration() * 1000);
-    };
-    void play(const string &strUrl) override {
-        _analysisMs = (*this)[kMaxAnalysisMS].as<int>();
-        PlayerImp<RtmpPlayer,RtmpDemuxer>::play(strUrl);
-    }
-private:
-    //派生类回调函数
-    bool onCheckMeta(AMFValue &val)  override {
-        _pRtmpMediaSrc = dynamic_pointer_cast<RtmpMediaSource>(_pMediaSrc);
-        if(_pRtmpMediaSrc){
-            _pRtmpMediaSrc->onGetMetaData(val);
-        }
-        _parser.reset(new RtmpDemuxer(val));
-        return true;
-    }
-    void onMediaData(const RtmpPacket::Ptr &chunkData) override {
-    	if(_pRtmpMediaSrc){
-            _pRtmpMediaSrc->onWrite(chunkData);
-        }
-        if(!_parser){
-    	    //这个流没有metedata，那么尝试在音视频包里面还原出相关信息
-            _parser.reset(new RtmpDemuxer());
-            onPlayResult_l(SockException(Err_success,"play rtmp success"));
-        }
-        _parser->inputRtmp(chunkData);
-        checkInited(_analysisMs);
-    }
-private:
-    RtmpMediaSource::Ptr _pRtmpMediaSrc;
-    int _analysisMs;
-};
+	class RtmpPlayerImp : public PlayerImp<RtmpPlayer, RtmpDemuxer> {
+	    public:
+		typedef std::shared_ptr<RtmpPlayerImp> Ptr;
+		RtmpPlayerImp(const EventPoller::Ptr& poller)
+			: PlayerImp<RtmpPlayer, RtmpDemuxer>(poller){};
+		virtual ~RtmpPlayerImp()
+		{
+			DebugL << endl;
+		};
+		float getProgress() const override
+		{
+			if (getDuration() > 0) {
+				return getProgressMilliSecond() / (getDuration() * 1000);
+			}
+			return PlayerBase::getProgress();
+		};
+		void seekTo(float fProgress) override
+		{
+			fProgress = MAX(float(0), MIN(fProgress, float(1.0)));
+			seekToMilliSecond(fProgress * getDuration() * 1000);
+		};
+		void play(const string& strUrl) override
+		{
+			_analysisMs = (*this)[kMaxAnalysisMS].as<int>();
+			PlayerImp<RtmpPlayer, RtmpDemuxer>::play(strUrl);
+		}
 
+	    private:
+		//派生类回调函数
+		bool onCheckMeta(AMFValue& val) override
+		{
+			_pRtmpMediaSrc = dynamic_pointer_cast<RtmpMediaSource>(_pMediaSrc);
+			if (_pRtmpMediaSrc) {
+				_pRtmpMediaSrc->onGetMetaData(val);
+			}
+			_parser.reset(new RtmpDemuxer(val));
+			return true;
+		}
+		void onMediaData(const RtmpPacket::Ptr& chunkData) override
+		{
+			if (_pRtmpMediaSrc) {
+				_pRtmpMediaSrc->onWrite(chunkData);
+			}
+			if (!_parser) {
+				//这个流没有metedata，那么尝试在音视频包里面还原出相关信息
+				_parser.reset(new RtmpDemuxer());
+				onPlayResult_l(SockException(Err_success, "play rtmp success"));
+			}
+			_parser->inputRtmp(chunkData);
+			checkInited(_analysisMs);
+		}
+
+	    private:
+		RtmpMediaSource::Ptr _pRtmpMediaSrc;
+		int		     _analysisMs;
+	};
 
 } /* namespace mediakit */
 

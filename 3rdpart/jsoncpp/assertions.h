@@ -20,34 +20,39 @@
 #if JSON_USE_EXCEPTION
 
 // @todo <= add detail about condition in exception
-# define JSON_ASSERT(condition)                                                \
-  {if (!(condition)) {Json::throwLogicError( "assert json failed" );}}
+#define JSON_ASSERT(condition)                                       \
+	{                                                            \
+		if (!(condition)) {                                  \
+			Json::throwLogicError("assert json failed"); \
+		}                                                    \
+	}
 
-# define JSON_FAIL_MESSAGE(message)                                            \
-  {                                                                            \
-    std::ostringstream oss; oss << message;                                    \
-    Json::throwLogicError(oss.str());                                          \
-  }
+#define JSON_FAIL_MESSAGE(message)                \
+	{                                         \
+		std::ostringstream oss;           \
+		oss << message;                   \
+		Json::throwLogicError(oss.str()); \
+	}
 
 #else // JSON_USE_EXCEPTION
 
-# define JSON_ASSERT(condition) assert(condition)
+#define JSON_ASSERT(condition) assert(condition)
 
 // The call to assert() will show the failure message in debug builds. In
 // release builds we abort, for a core-dump or debugger.
-# define JSON_FAIL_MESSAGE(message)                                            \
-  {                                                                            \
-    std::ostringstream oss; oss << message;                                    \
-    assert(false && oss.str().c_str());                                        \
-    abort();                                                                   \
-  }
-
+#define JSON_FAIL_MESSAGE(message)                  \
+	{                                           \
+		std::ostringstream oss;             \
+		oss << message;                     \
+		assert(false && oss.str().c_str()); \
+		abort();                            \
+	}
 
 #endif
 
-#define JSON_ASSERT_MESSAGE(condition, message)                                \
-  if (!(condition)) {                                                          \
-    JSON_FAIL_MESSAGE(message);                                                \
-  }
+#define JSON_ASSERT_MESSAGE(condition, message) \
+	if (!(condition)) {                     \
+		JSON_FAIL_MESSAGE(message);     \
+	}
 
 #endif // CPPTL_JSON_ASSERTIONS_H_INCLUDED

@@ -26,8 +26,6 @@
 
 #include "H265.h"
 
-namespace mediakit{
+namespace mediakit {
 
-
-}//namespace mediakit
-
+} // namespace mediakit

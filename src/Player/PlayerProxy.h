@@ -35,50 +35,43 @@
 using namespace std;
 using namespace toolkit;
 
-
 namespace mediakit {
 
-class PlayerProxy :public MediaPlayer,
-				   public std::enable_shared_from_this<PlayerProxy> ,
-				   public MediaSourceEvent{
-public:
-	typedef std::shared_ptr<PlayerProxy> Ptr;
+	class PlayerProxy : public MediaPlayer, public std::enable_shared_from_this<PlayerProxy>, public MediaSourceEvent {
+	    public:
+		typedef std::shared_ptr<PlayerProxy> Ptr;
 
-    //如果iRetryCount<0,则一直重试播放；否则重试iRetryCount次数
-    //默认一直重试
-	PlayerProxy(const string &strVhost,
-                const string &strApp,
-                const string &strSrc,
-                bool bEnableHls = true,
-                bool bEnableMp4 = false,
-                int iRetryCount = -1,
-				const EventPoller::Ptr &poller = nullptr);
+		//如果iRetryCount<0,则一直重试播放；否则重试iRetryCount次数
+		//默认一直重试
+		PlayerProxy(const string& strVhost, const string& strApp, const string& strSrc, bool bEnableHls = true, bool bEnableMp4 = false, int iRetryCount = -1, const EventPoller::Ptr& poller = nullptr);
 
-	virtual ~PlayerProxy();
+		virtual ~PlayerProxy();
 
-    /**
-     * 设置play结果回调，只触发一次；在play执行之前有效
-     * @param cb
-     */
-    void setPlayCallbackOnce(const function<void(const SockException &ex)> &cb);
+		/**
+		 * 设置play结果回调，只触发一次；在play执行之前有效
+		 * @param cb
+		 */
+		void setPlayCallbackOnce(const function<void(const SockException& ex)>& cb);
 
-	void play(const string &strUrl) override;
+		void play(const string& strUrl) override;
 
-    bool close() override;
-private:
-	void rePlay(const string &strUrl,int iFailedCnt);
-	void onPlaySuccess();
-private:
-    bool _bEnableHls;
-    bool _bEnableMp4;
-    int _iRetryCount;
-	MultiMediaSourceMuxer::Ptr _mediaMuxer;
-    string _strVhost;
-    string _strApp;
-    string _strSrc;
-    Timer::Ptr _timer;
-    function<void(const SockException &ex)> _playCB;
-};
+		bool close() override;
+
+	    private:
+		void rePlay(const string& strUrl, int iFailedCnt);
+		void onPlaySuccess();
+
+	    private:
+		bool					_bEnableHls;
+		bool					_bEnableMp4;
+		int					_iRetryCount;
+		MultiMediaSourceMuxer::Ptr		_mediaMuxer;
+		string					_strVhost;
+		string					_strApp;
+		string					_strSrc;
+		Timer::Ptr				_timer;
+		function<void(const SockException& ex)> _playCB;
+	};
 
 } /* namespace mediakit */
 

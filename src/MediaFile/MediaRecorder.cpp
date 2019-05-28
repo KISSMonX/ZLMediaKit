@@ -35,70 +35,68 @@ using namespace toolkit;
 
 namespace mediakit {
 
-MediaRecorder::MediaRecorder(const string &strVhost_tmp,
-                             const string &strApp,
-                             const string &strId,
-                             bool enableHls,
-                             bool enableMp4) {
+	MediaRecorder::MediaRecorder(const string& strVhost_tmp, const string& strApp, const string& strId, bool enableHls, bool enableMp4)
+	{
 
-    GET_CONFIG_AND_REGISTER(string,hlsPath,Hls::kFilePath);
-    GET_CONFIG_AND_REGISTER(uint32_t,hlsBufSize,Hls::kFileBufSize);
-    GET_CONFIG_AND_REGISTER(uint32_t,hlsDuration,Hls::kSegmentDuration);
-    GET_CONFIG_AND_REGISTER(uint32_t,hlsNum,Hls::kSegmentNum);
+		GET_CONFIG_AND_REGISTER(string, hlsPath, Hls::kFilePath);
+		GET_CONFIG_AND_REGISTER(uint32_t, hlsBufSize, Hls::kFileBufSize);
+		GET_CONFIG_AND_REGISTER(uint32_t, hlsDuration, Hls::kSegmentDuration);
+		GET_CONFIG_AND_REGISTER(uint32_t, hlsNum, Hls::kSegmentNum);
 
-    string strVhost = strVhost_tmp;
-    if(trim(strVhost).empty()){
-        //如果strVhost为空，则强制为默认虚拟主机
-        strVhost = DEFAULT_VHOST;
-    }
+		string strVhost = strVhost_tmp;
+		if (trim(strVhost).empty()) {
+			//如果strVhost为空，则强制为默认虚拟主机
+			strVhost = DEFAULT_VHOST;
+		}
 
 #if defined(ENABLE_HLS)
-    if(enableHls) {
-        auto m3u8FilePath = hlsPath + "/" + strVhost + "/" + strApp + "/" + strId + "/hls.m3u8";
-        _hlsMaker.reset(new HlsRecorder(m3u8FilePath,string(VHOST_KEY) + "=" + strVhost ,hlsBufSize, hlsDuration, hlsNum));
-    }
-#endif //defined(ENABLE_HLS)
+		if (enableHls) {
+			auto m3u8FilePath = hlsPath + "/" + strVhost + "/" + strApp + "/" + strId + "/hls.m3u8";
+			_hlsMaker.reset(new HlsRecorder(m3u8FilePath, string(VHOST_KEY) + "=" + strVhost, hlsBufSize, hlsDuration, hlsNum));
+		}
+#endif // defined(ENABLE_HLS)
 
 #if defined(ENABLE_MP4V2)
-    GET_CONFIG_AND_REGISTER(string,recordPath,Record::kFilePath);
-    GET_CONFIG_AND_REGISTER(string,recordAppName,Record::kAppName);
+		GET_CONFIG_AND_REGISTER(string, recordPath, Record::kFilePath);
+		GET_CONFIG_AND_REGISTER(string, recordAppName, Record::kAppName);
 
-    if(enableMp4){
-        auto mp4FilePath = recordPath + "/" + strVhost + "/" + recordAppName + "/" + strApp + "/"  + strId + "/";
-        _mp4Maker.reset(new Mp4Maker(mp4FilePath,strVhost,strApp,strId));
-    }
-#endif //defined(ENABLE_MP4V2)
-}
+		if (enableMp4) {
+			auto mp4FilePath = recordPath + "/" + strVhost + "/" + recordAppName + "/" + strApp + "/" + strId + "/";
+			_mp4Maker.reset(new Mp4Maker(mp4FilePath, strVhost, strApp, strId));
+		}
+#endif // defined(ENABLE_MP4V2)
+	}
 
-MediaRecorder::~MediaRecorder() {
-}
+	MediaRecorder::~MediaRecorder() {}
 
-void MediaRecorder::inputFrame(const Frame::Ptr &frame) {
+	void MediaRecorder::inputFrame(const Frame::Ptr& frame)
+	{
 #if defined(ENABLE_HLS)
-    if (_hlsMaker) {
-        _hlsMaker->inputFrame(frame);
-    }
-#endif //defined(ENABLE_HLS)
+		if (_hlsMaker) {
+			_hlsMaker->inputFrame(frame);
+		}
+#endif // defined(ENABLE_HLS)
 
 #if defined(ENABLE_MP4V2)
-    if (_mp4Maker) {
-        _mp4Maker->inputFrame(frame);
-    }
-#endif //defined(ENABLE_MP4V2)
-}
+		if (_mp4Maker) {
+			_mp4Maker->inputFrame(frame);
+		}
+#endif // defined(ENABLE_MP4V2)
+	}
 
-void MediaRecorder::addTrack(const Track::Ptr &track) {
+	void MediaRecorder::addTrack(const Track::Ptr& track)
+	{
 #if defined(ENABLE_HLS)
-    if (_hlsMaker) {
-        _hlsMaker->addTrack(track);
-    }
-#endif //defined(ENABLE_HLS)
+		if (_hlsMaker) {
+			_hlsMaker->addTrack(track);
+		}
+#endif // defined(ENABLE_HLS)
 
 #if defined(ENABLE_MP4V2)
-    if (_mp4Maker) {
-        _mp4Maker->addTrack(track);
-    }
-#endif //defined(ENABLE_MP4V2)
-}
+		if (_mp4Maker) {
+			_mp4Maker->addTrack(track);
+		}
+#endif // defined(ENABLE_MP4V2)
+	}
 
 } /* namespace mediakit */

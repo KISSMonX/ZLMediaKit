@@ -32,72 +32,73 @@
 #include "Util/RingBuffer.h"
 using namespace toolkit;
 
-namespace mediakit{
+namespace mediakit {
 
-class RtmpRingInterface {
-public:
-    typedef RingBuffer<RtmpPacket::Ptr> RingType;
-    typedef std::shared_ptr<RtmpRingInterface> Ptr;
+	class RtmpRingInterface {
+	    public:
+		typedef RingBuffer<RtmpPacket::Ptr>	RingType;
+		typedef std::shared_ptr<RtmpRingInterface> Ptr;
 
-    RtmpRingInterface(){}
-    virtual ~RtmpRingInterface(){}
+		RtmpRingInterface() {}
+		virtual ~RtmpRingInterface() {}
 
-    /**
-     * 获取rtmp环形缓存
-     * @return
-     */
-    virtual RingType::Ptr getRtmpRing() const = 0;
+		/**
+		 * 获取rtmp环形缓存
+		 * @return
+		 */
+		virtual RingType::Ptr getRtmpRing() const = 0;
 
-    /**
-     * 设置rtmp环形缓存
-     * @param ring
-     */
-    virtual void setRtmpRing(const RingType::Ptr &ring) = 0;
+		/**
+		 * 设置rtmp环形缓存
+		 * @param ring
+		 */
+		virtual void setRtmpRing(const RingType::Ptr& ring) = 0;
 
-    /**
-     * 输入rtmp包
-     * @param rtmp rtmp包
-     * @param key_pos 是否为关键帧
-     * @return 是否为关键帧
-     */
-    virtual bool inputRtmp(const RtmpPacket::Ptr &rtmp, bool key_pos) = 0;
-};
+		/**
+		 * 输入rtmp包
+		 * @param rtmp rtmp包
+		 * @param key_pos 是否为关键帧
+		 * @return 是否为关键帧
+		 */
+		virtual bool inputRtmp(const RtmpPacket::Ptr& rtmp, bool key_pos) = 0;
+	};
 
-class RtmpRing : public RtmpRingInterface {
-public:
-    typedef std::shared_ptr<RtmpRing> Ptr;
+	class RtmpRing : public RtmpRingInterface {
+	    public:
+		typedef std::shared_ptr<RtmpRing> Ptr;
 
-    RtmpRing(){
-    }
-    virtual ~RtmpRing(){}
+		RtmpRing() {}
+		virtual ~RtmpRing() {}
 
-    RingType::Ptr getRtmpRing() const override {
-        return _rtmpRing;
-    }
+		RingType::Ptr getRtmpRing() const override
+		{
+			return _rtmpRing;
+		}
 
-    void setRtmpRing(const RingType::Ptr &ring) override {
-        _rtmpRing = ring;
-    }
+		void setRtmpRing(const RingType::Ptr& ring) override
+		{
+			_rtmpRing = ring;
+		}
 
-    bool inputRtmp(const RtmpPacket::Ptr &rtmp, bool key_pos) override{
-        if(_rtmpRing){
-            _rtmpRing->write(rtmp,key_pos);
-        }
-        return key_pos;
-    }
-protected:
-    RingType::Ptr _rtmpRing;
-};
+		bool inputRtmp(const RtmpPacket::Ptr& rtmp, bool key_pos) override
+		{
+			if (_rtmpRing) {
+				_rtmpRing->write(rtmp, key_pos);
+			}
+			return key_pos;
+		}
 
+	    protected:
+		RingType::Ptr _rtmpRing;
+	};
 
-class RtmpCodec : public RtmpRing, public FrameRingInterfaceDelegate , public CodecInfo{
-public:
-    typedef std::shared_ptr<RtmpCodec> Ptr;
-    RtmpCodec(){}
-    virtual ~RtmpCodec(){}
-};
+	class RtmpCodec : public RtmpRing, public FrameRingInterfaceDelegate, public CodecInfo {
+	    public:
+		typedef std::shared_ptr<RtmpCodec> Ptr;
+		RtmpCodec() {}
+		virtual ~RtmpCodec() {}
+	};
 
+} // namespace mediakit
 
-}//namespace mediakit
-
-#endif //ZLMEDIAKIT_RTMPCODEC_H
+#endif // ZLMEDIAKIT_RTMPCODEC_H

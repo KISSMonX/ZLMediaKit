@@ -48,72 +48,80 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class RtmpMediaSource: public MediaSource ,public RingDelegate<RtmpPacket::Ptr> {
-public:
-	typedef std::shared_ptr<RtmpMediaSource> Ptr;
-	typedef RingBuffer<RtmpPacket::Ptr> RingType;
+	class RtmpMediaSource : public MediaSource, public RingDelegate<RtmpPacket::Ptr> {
+	    public:
+		typedef std::shared_ptr<RtmpMediaSource> Ptr;
+		typedef RingBuffer<RtmpPacket::Ptr>      RingType;
 
-	RtmpMediaSource(const string &vhost,const string &strApp, const string &strId,int ringSize = 0) :
-			MediaSource(RTMP_SCHEMA,vhost,strApp,strId),
-			_pRing(new RingBuffer<RtmpPacket::Ptr>(ringSize)) {
-	}
-	virtual ~RtmpMediaSource() {}
-
-	const RingType::Ptr &getRing() const {
-		//获取媒体源的rtp环形缓冲
-		return _pRing;
-	}
-
-	const AMFValue &getMetaData() const {
-		lock_guard<recursive_mutex> lock(_mtxMap);
-		return _metadata;
-	}
-	template<typename FUN>
-	void getConfigFrame(const FUN &f) {
-		lock_guard<recursive_mutex> lock(_mtxMap);
-		for (auto &pr : _mapCfgFrame) {
-			f(pr.second);
+		RtmpMediaSource(const string& vhost, const string& strApp, const string& strId, int ringSize = 0)
+			: MediaSource(RTMP_SCHEMA, vhost, strApp, strId)
+			, _pRing(new RingBuffer<RtmpPacket::Ptr>(ringSize))
+		{
 		}
-	}
+		virtual ~RtmpMediaSource() {}
 
-	virtual void onGetMetaData(const AMFValue &metadata) {
-		lock_guard<recursive_mutex> lock(_mtxMap);
-		_metadata = metadata;
-	}
+		const RingType::Ptr& getRing() const
+		{
+			//获取媒体源的rtp环形缓冲
+			return _pRing;
+		}
 
-    void onWrite(const RtmpPacket::Ptr &pkt,bool isKey = true) override {
-		lock_guard<recursive_mutex> lock(_mtxMap);
-		if (pkt->isCfgFrame()) {
-			_mapCfgFrame[pkt->typeId] = pkt;
-		} else{
-			if(!_bRegisted){
-                MediaSource::regist();
-                _bRegisted = true;
+		const AMFValue& getMetaData() const
+		{
+			lock_guard<recursive_mutex> lock(_mtxMap);
+			return _metadata;
+		}
+		template<typename FUN> void getConfigFrame(const FUN& f)
+		{
+			lock_guard<recursive_mutex> lock(_mtxMap);
+			for (auto& pr : _mapCfgFrame) {
+				f(pr.second);
 			}
-			_mapStamp[pkt->typeId] = pkt->timeStamp;
-			_pRing->write(pkt,pkt->isVideoKeyFrame());
 		}
-	}
 
-	uint32_t getTimeStamp(TrackType trackType) override {
-		lock_guard<recursive_mutex> lock(_mtxMap);
-		switch (trackType){
+		virtual void onGetMetaData(const AMFValue& metadata)
+		{
+			lock_guard<recursive_mutex> lock(_mtxMap);
+			_metadata = metadata;
+		}
+
+		void onWrite(const RtmpPacket::Ptr& pkt, bool isKey = true) override
+		{
+			lock_guard<recursive_mutex> lock(_mtxMap);
+			if (pkt->isCfgFrame()) {
+				_mapCfgFrame[pkt->typeId] = pkt;
+			}
+			else {
+				if (!_bRegisted) {
+					MediaSource::regist();
+					_bRegisted = true;
+				}
+				_mapStamp[pkt->typeId] = pkt->timeStamp;
+				_pRing->write(pkt, pkt->isVideoKeyFrame());
+			}
+		}
+
+		uint32_t getTimeStamp(TrackType trackType) override
+		{
+			lock_guard<recursive_mutex> lock(_mtxMap);
+			switch (trackType) {
 			case TrackVideo:
 				return _mapStamp[MSG_VIDEO];
 			case TrackAudio:
 				return _mapStamp[MSG_AUDIO];
 			default:
-				return MAX(_mapStamp[MSG_VIDEO],_mapStamp[MSG_AUDIO]);
+				return MAX(_mapStamp[MSG_VIDEO], _mapStamp[MSG_AUDIO]);
+			}
 		}
-	}
-protected:
-	AMFValue _metadata;
-    unordered_map<int, RtmpPacket::Ptr> _mapCfgFrame;
-	unordered_map<int,uint32_t> _mapStamp;
-	mutable recursive_mutex _mtxMap;
-	RingBuffer<RtmpPacket::Ptr>::Ptr _pRing; //rtp环形缓冲
-	bool _bRegisted = false;
-};
+
+	    protected:
+		AMFValue			    _metadata;
+		unordered_map<int, RtmpPacket::Ptr> _mapCfgFrame;
+		unordered_map<int, uint32_t>	_mapStamp;
+		mutable recursive_mutex		    _mtxMap;
+		RingBuffer<RtmpPacket::Ptr>::Ptr    _pRing; // rtp环形缓冲
+		bool				    _bRegisted = false;
+	};
 
 } /* namespace mediakit */
 

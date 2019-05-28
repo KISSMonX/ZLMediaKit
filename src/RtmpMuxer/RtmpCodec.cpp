@@ -25,6 +25,6 @@
  */
 
 #include "RtmpCodec.h"
-namespace mediakit{
+namespace mediakit {
 
 }

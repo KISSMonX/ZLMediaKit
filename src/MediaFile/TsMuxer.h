@@ -35,25 +35,28 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class TsMuxer {
-public:
-    TsMuxer();
-    virtual ~TsMuxer();
-    void addTrack(const Track::Ptr &track);
-    void inputFrame(const Frame::Ptr &frame);
-protected:
-    virtual void onTs(const void *packet, int bytes,uint32_t timestamp,int flags) = 0;
-    void resetTracks();
-private:
-    void init();
-    void uninit();
-private:
-    void  *_context = nullptr;
-    char *_tsbuf[188];
-    uint32_t _timestamp = 0;
-    unordered_map<int,int > _codecid_to_stream_id;
-    List<Frame::Ptr> _frameCached;
-};
+	class TsMuxer {
+	    public:
+		TsMuxer();
+		virtual ~TsMuxer();
+		void addTrack(const Track::Ptr& track);
+		void inputFrame(const Frame::Ptr& frame);
 
-}//namespace mediakit
-#endif //TSMUXER_H
+	    protected:
+		virtual void onTs(const void* packet, int bytes, uint32_t timestamp, int flags) = 0;
+		void	 resetTracks();
+
+	    private:
+		void init();
+		void uninit();
+
+	    private:
+		void*			_context = nullptr;
+		char*			_tsbuf[188];
+		uint32_t		_timestamp = 0;
+		unordered_map<int, int> _codecid_to_stream_id;
+		List<Frame::Ptr>	_frameCached;
+	};
+
+} // namespace mediakit
+#endif // TSMUXER_H

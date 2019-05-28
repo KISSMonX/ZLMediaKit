@@ -28,13 +28,14 @@
 
 namespace mediakit {
 
-void HttpClientImp::onConnect(const SockException &ex) {
-	if(!_isHttps){
-		HttpClient::onConnect(ex);
-	} else {
-		TcpClientWithSSL<HttpClient>::onConnect(ex);
+	void HttpClientImp::onConnect(const SockException& ex)
+	{
+		if (!_isHttps) {
+			HttpClient::onConnect(ex);
+		}
+		else {
+			TcpClientWithSSL<HttpClient>::onConnect(ex);
+		}
 	}
-
-}
 
 } /* namespace mediakit */

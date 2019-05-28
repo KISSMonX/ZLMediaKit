@@ -36,168 +36,150 @@
 
 namespace mediakit {
 
-/**
- * rtmp metedata基类，用于描述rtmp格式信息
- */
-class Metedata : public CodecInfo{
-public:
-    typedef std::shared_ptr<Metedata> Ptr;
+	/**
+	 * rtmp metedata基类，用于描述rtmp格式信息
+	 */
+	class Metedata : public CodecInfo {
+	    public:
+		typedef std::shared_ptr<Metedata> Ptr;
 
-    Metedata():_metedata(AMF_OBJECT){}
-    virtual ~Metedata(){}
-    const AMFValue &getMetedata() const{
-        return _metedata;
-    }
-protected:
-    AMFValue _metedata;
-};
+		Metedata()
+			: _metedata(AMF_OBJECT)
+		{
+		}
+		virtual ~Metedata() {}
+		const AMFValue& getMetedata() const
+		{
+			return _metedata;
+		}
 
-/**
-* metedata中除音视频外的其他描述部分
-*/
-class TitleMete : public Metedata{
-public:
-    typedef std::shared_ptr<TitleMete> Ptr;
+	    protected:
+		AMFValue _metedata;
+	};
 
-    TitleMete(float dur_sec = 0,
-              uint64_t fileSize = 0,
-              const map<string,string> &header = map<string,string>()){
-        _metedata.set("duration", dur_sec);
-        _metedata.set("fileSize", 0);
-        _metedata.set("server","ZLMediaKit");
-        for (auto &pr : header){
-            _metedata.set(pr.first, pr.second);
-        }
-    }
+	/**
+	 * metedata中除音视频外的其他描述部分
+	 */
+	class TitleMete : public Metedata {
+	    public:
+		typedef std::shared_ptr<TitleMete> Ptr;
 
-    /**
-     * 返回音频或视频类型
-     * @return
-     */
-    TrackType getTrackType() const override {
-        return TrackTitle;
-    }
+		TitleMete(float dur_sec = 0, uint64_t fileSize = 0, const map<string, string>& header = map<string, string>())
+		{
+			_metedata.set("duration", dur_sec);
+			_metedata.set("fileSize", 0);
+			_metedata.set("server", "ZLMediaKit");
+			for (auto& pr : header) {
+				_metedata.set(pr.first, pr.second);
+			}
+		}
 
-    /**
-     * 返回编码器id
-     * @return
-     */
-    CodecId getCodecId() const override{
-        return CodecInvalid;
-    }
-};
+		/**
+		 * 返回音频或视频类型
+		 * @return
+		 */
+		TrackType getTrackType() const override
+		{
+			return TrackTitle;
+		}
 
-class VideoMete : public Metedata{
-public:
-    typedef std::shared_ptr<VideoMete> Ptr;
+		/**
+		 * 返回编码器id
+		 * @return
+		 */
+		CodecId getCodecId() const override
+		{
+			return CodecInvalid;
+		}
+	};
 
-    VideoMete(const VideoTrack::Ptr &video,int datarate = 5000){
-        if(video->getVideoWidth() > 0 ){
-            _metedata.set("width", video->getVideoWidth());
-        }
-        if(video->getVideoHeight() > 0 ){
-            _metedata.set("height", video->getVideoHeight());
-        }
-        if(video->getVideoFps() > 0 ){
-            _metedata.set("framerate", video->getVideoFps());
-        }
-        _metedata.set("videodatarate", datarate);
-        _codecId = video->getCodecId();
-        _metedata.set("videocodecid", Factory::getAmfByCodecId(_codecId));
-    }
-    virtual ~VideoMete(){}
+	class VideoMete : public Metedata {
+	    public:
+		typedef std::shared_ptr<VideoMete> Ptr;
 
-    /**
-     * 返回音频或视频类型
-     * @return
-     */
-    TrackType getTrackType() const override {
-        return TrackVideo;
-    }
+		VideoMete(const VideoTrack::Ptr& video, int datarate = 5000)
+		{
+			if (video->getVideoWidth() > 0) {
+				_metedata.set("width", video->getVideoWidth());
+			}
+			if (video->getVideoHeight() > 0) {
+				_metedata.set("height", video->getVideoHeight());
+			}
+			if (video->getVideoFps() > 0) {
+				_metedata.set("framerate", video->getVideoFps());
+			}
+			_metedata.set("videodatarate", datarate);
+			_codecId = video->getCodecId();
+			_metedata.set("videocodecid", Factory::getAmfByCodecId(_codecId));
+		}
+		virtual ~VideoMete() {}
 
-    /**
-     * 返回编码器id
-     * @return
-     */
-    CodecId getCodecId() const override{
-        return _codecId;
-    }
-private:
-    CodecId _codecId;
-};
+		/**
+		 * 返回音频或视频类型
+		 * @return
+		 */
+		TrackType getTrackType() const override
+		{
+			return TrackVideo;
+		}
 
+		/**
+		 * 返回编码器id
+		 * @return
+		 */
+		CodecId getCodecId() const override
+		{
+			return _codecId;
+		}
 
-class AudioMete : public Metedata{
-public:
-    typedef std::shared_ptr<AudioMete> Ptr;
+	    private:
+		CodecId _codecId;
+	};
 
-    AudioMete(const AudioTrack::Ptr &audio,int datarate = 160){
-        _metedata.set("audiodatarate", datarate);
-        if(audio->getAudioSampleRate() > 0){
-            _metedata.set("audiosamplerate", audio->getAudioSampleRate());
-        }
-        if(audio->getAudioSampleBit() > 0){
-            _metedata.set("audiosamplesize", audio->getAudioSampleBit());
-        }
-        if(audio->getAudioChannel() > 0){
-            _metedata.set("audiochannels", audio->getAudioChannel());
-            _metedata.set("stereo", audio->getAudioChannel() > 1);
-        }
-        _codecId = audio->getCodecId();
-        _metedata.set("audiocodecid", Factory::getAmfByCodecId(_codecId));
-    }
-    virtual ~AudioMete(){}
+	class AudioMete : public Metedata {
+	    public:
+		typedef std::shared_ptr<AudioMete> Ptr;
 
-    /**
-     * 返回音频或视频类型
-     * @return
-     */
-    TrackType getTrackType() const override {
-        return TrackAudio;
-    }
+		AudioMete(const AudioTrack::Ptr& audio, int datarate = 160)
+		{
+			_metedata.set("audiodatarate", datarate);
+			if (audio->getAudioSampleRate() > 0) {
+				_metedata.set("audiosamplerate", audio->getAudioSampleRate());
+			}
+			if (audio->getAudioSampleBit() > 0) {
+				_metedata.set("audiosamplesize", audio->getAudioSampleBit());
+			}
+			if (audio->getAudioChannel() > 0) {
+				_metedata.set("audiochannels", audio->getAudioChannel());
+				_metedata.set("stereo", audio->getAudioChannel() > 1);
+			}
+			_codecId = audio->getCodecId();
+			_metedata.set("audiocodecid", Factory::getAmfByCodecId(_codecId));
+		}
+		virtual ~AudioMete() {}
 
-    /**
-     * 返回编码器id
-     * @return
-     */
-    CodecId getCodecId() const override{
-        return _codecId;
-    }
-private:
-    CodecId _codecId;
-};
+		/**
+		 * 返回音频或视频类型
+		 * @return
+		 */
+		TrackType getTrackType() const override
+		{
+			return TrackAudio;
+		}
 
+		/**
+		 * 返回编码器id
+		 * @return
+		 */
+		CodecId getCodecId() const override
+		{
+			return _codecId;
+		}
 
+	    private:
+		CodecId _codecId;
+	};
 
+} // namespace mediakit
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}//namespace mediakit
-
-#endif //ZLMEDIAKIT_RTMPMETEDATA_H
+#endif // ZLMEDIAKIT_RTMPMETEDATA_H

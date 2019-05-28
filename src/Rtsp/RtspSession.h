@@ -48,165 +48,174 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class RtspSession;
+	class RtspSession;
 
-class BufferRtp : public Buffer{
-public:
-    typedef std::shared_ptr<BufferRtp> Ptr;
-    BufferRtp(const RtpPacket::Ptr & pkt,uint32_t offset = 0 ):_rtp(pkt),_offset(offset){}
-    virtual ~BufferRtp(){}
+	class BufferRtp : public Buffer {
+	    public:
+		typedef std::shared_ptr<BufferRtp> Ptr;
+		BufferRtp(const RtpPacket::Ptr& pkt, uint32_t offset = 0)
+			: _rtp(pkt)
+			, _offset(offset)
+		{
+		}
+		virtual ~BufferRtp() {}
 
-    char *data() const override {
-        return (char *)_rtp->payload + _offset;
-    }
-    uint32_t size() const override {
-        return _rtp->length - _offset;
-    }
-private:
-    RtpPacket::Ptr _rtp;
-    uint32_t _offset;
-};
+		char* data() const override
+		{
+			return (char*)_rtp->payload + _offset;
+		}
+		uint32_t size() const override
+		{
+			return _rtp->length - _offset;
+		}
 
-class RtspSession: public TcpSession, public RtspSplitter, public RtpReceiver , public MediaSourceEvent{
-public:
-	typedef std::shared_ptr<RtspSession> Ptr;
-	typedef std::function<void(const string &realm)> onGetRealm;
-    //encrypted为true是则表明是md5加密的密码，否则是明文密码
-    //在请求明文密码时如果提供md5密码者则会导致认证失败
-	typedef std::function<void(bool encrypted,const string &pwd_or_md5)> onAuth;
+	    private:
+		RtpPacket::Ptr _rtp;
+		uint32_t       _offset;
+	};
 
-	RtspSession(const Socket::Ptr &pSock);
-	virtual ~RtspSession();
-	void onRecv(const Buffer::Ptr &pBuf) override;
-	void onError(const SockException &err) override;
-	void onManager() override;
-protected:
-	//RtspSplitter override
-    /**
-     * 收到完整的rtsp包回调，包括sdp等content数据
-     * @param parser rtsp包
-     */
-    void onWholeRtspPacket(Parser &parser) override;
+	class RtspSession : public TcpSession, public RtspSplitter, public RtpReceiver, public MediaSourceEvent {
+	    public:
+		typedef std::shared_ptr<RtspSession>		 Ptr;
+		typedef std::function<void(const string& realm)> onGetRealm;
+		// encrypted为true是则表明是md5加密的密码，否则是明文密码
+		//在请求明文密码时如果提供md5密码者则会导致认证失败
+		typedef std::function<void(bool encrypted, const string& pwd_or_md5)> onAuth;
 
-    /**
-     * 收到rtp包回调
-     * @param data
-     * @param len
-     */
-    void onRtpPacket(const char *data,uint64_t len) override;
+		RtspSession(const Socket::Ptr& pSock);
+		virtual ~RtspSession();
+		void onRecv(const Buffer::Ptr& pBuf) override;
+		void onError(const SockException& err) override;
+		void onManager() override;
 
-    /**
-     * 从rtsp头中获取Content长度
-     * @param parser
-     * @return
-     */
-    int64_t getContentLength(Parser &parser) override;
+	    protected:
+		// RtspSplitter override
+		/**
+		 * 收到完整的rtsp包回调，包括sdp等content数据
+		 * @param parser rtsp包
+		 */
+		void onWholeRtspPacket(Parser& parser) override;
 
-	//RtpReceiver override
-	void onRtpSorted(const RtpPacket::Ptr &rtppt, int trackidx) override;
-	//MediaSourceEvent override
-	bool close() override ;
+		/**
+		 * 收到rtp包回调
+		 * @param data
+		 * @param len
+		 */
+		void onRtpPacket(const char* data, uint64_t len) override;
 
-	//TcpSession override
-    int send(const Buffer::Ptr &pkt) override;
+		/**
+		 * 从rtsp头中获取Content长度
+		 * @param parser
+		 * @return
+		 */
+		int64_t getContentLength(Parser& parser) override;
 
+		// RtpReceiver override
+		void onRtpSorted(const RtpPacket::Ptr& rtppt, int trackidx) override;
+		// MediaSourceEvent override
+		bool close() override;
 
-    /**
-     * 收到RTCP包回调
-     * @param iTrackidx
-     * @param track
-     * @param pucData
-     * @param uiLen
-     */
-    virtual void onRtcpPacket(int iTrackidx, SdpTrack::Ptr &track, unsigned char *pucData, unsigned int uiLen);
-private:
-	bool handleReq_Options(const Parser &parser); //处理options方法
-    bool handleReq_Describe(const Parser &parser); //处理describe方法
-    bool handleReq_ANNOUNCE(const Parser &parser); //处理options方法
-    bool handleReq_RECORD(const Parser &parser); //处理options方法
-    bool handleReq_Setup(const Parser &parser); //处理setup方法
-    bool handleReq_Play(const Parser &parser); //处理play方法
-    bool handleReq_Pause(const Parser &parser); //处理pause方法
-    bool handleReq_Teardown(const Parser &parser); //处理teardown方法
-    bool handleReq_Get(const Parser &parser); //处理Get方法
-    bool handleReq_Post(const Parser &parser); //处理Post方法
-    bool handleReq_SET_PARAMETER(const Parser &parser); //处理SET_PARAMETER方法
+		// TcpSession override
+		int send(const Buffer::Ptr& pkt) override;
 
-	void inline send_StreamNotFound(); //rtsp资源未找到
-	void inline send_UnsupportedTransport(); //不支持的传输模式
-	void inline send_SessionNotFound(); //会话id错误
-	void inline send_NotAcceptable(); //rtsp同时播放数限制
-	inline bool findStream(); //根据rtsp url查找 MediaSource实例
-    inline void findStream(const function<void(bool)> &cb); //根据rtsp url查找 MediaSource实例
+		/**
+		 * 收到RTCP包回调
+		 * @param iTrackidx
+		 * @param track
+		 * @param pucData
+		 * @param uiLen
+		 */
+		virtual void onRtcpPacket(int iTrackidx, SdpTrack::Ptr& track, unsigned char* pucData, unsigned int uiLen);
 
-	inline string printSSRC(uint32_t ui32Ssrc);
-	inline int getTrackIndexByTrackType(TrackType type);
-    inline int getTrackIndexByControlSuffix(const string &controlSuffix);
-	inline int getTrackIndexByInterleaved(int interleaved);
+	    private:
+		bool handleReq_Options(const Parser& parser);       //处理options方法
+		bool handleReq_Describe(const Parser& parser);      //处理describe方法
+		bool handleReq_ANNOUNCE(const Parser& parser);      //处理options方法
+		bool handleReq_RECORD(const Parser& parser);	//处理options方法
+		bool handleReq_Setup(const Parser& parser);	 //处理setup方法
+		bool handleReq_Play(const Parser& parser);	  //处理play方法
+		bool handleReq_Pause(const Parser& parser);	 //处理pause方法
+		bool handleReq_Teardown(const Parser& parser);      //处理teardown方法
+		bool handleReq_Get(const Parser& parser);	   //处理Get方法
+		bool handleReq_Post(const Parser& parser);	  //处理Post方法
+		bool handleReq_SET_PARAMETER(const Parser& parser); //处理SET_PARAMETER方法
 
-	inline void onRcvPeerUdpData(int intervaled, const Buffer::Ptr &pBuf, const struct sockaddr &addr);
-	inline void startListenPeerUdpData(int iTrackIdx);
+		void inline send_StreamNotFound();			// rtsp资源未找到
+		void inline send_UnsupportedTransport();		//不支持的传输模式
+		void inline send_SessionNotFound();			//会话id错误
+		void inline send_NotAcceptable();			// rtsp同时播放数限制
+		inline bool findStream();				//根据rtsp url查找 MediaSource实例
+		inline void findStream(const function<void(bool)>& cb); //根据rtsp url查找 MediaSource实例
 
-    //认证相关
-    static void onAuthSuccess(const weak_ptr<RtspSession> &weakSelf);
-    static void onAuthFailed(const weak_ptr<RtspSession> &weakSelf,const string &realm);
-    static void onAuthUser(const weak_ptr<RtspSession> &weakSelf,const string &realm,const string &authorization);
-    static void onAuthBasic(const weak_ptr<RtspSession> &weakSelf,const string &realm,const string &strBase64);
-    static void onAuthDigest(const weak_ptr<RtspSession> &weakSelf,const string &realm,const string &strMd5);
+		inline string printSSRC(uint32_t ui32Ssrc);
+		inline int    getTrackIndexByTrackType(TrackType type);
+		inline int    getTrackIndexByControlSuffix(const string& controlSuffix);
+		inline int    getTrackIndexByInterleaved(int interleaved);
 
-    void doDelay(int delaySec,const std::function<void()> &fun);
-    void cancelDelyaTask();
+		inline void onRcvPeerUdpData(int intervaled, const Buffer::Ptr& pBuf, const struct sockaddr& addr);
+		inline void startListenPeerUdpData(int iTrackIdx);
 
-	inline void sendRtpPacket(const RtpPacket::Ptr &pkt);
-	bool sendRtspResponse(const string &res_code,const std::initializer_list<string> &header, const string &sdp = "" , const char *protocol = "RTSP/1.0");
-	bool sendRtspResponse(const string &res_code,const StrCaseMap &header = StrCaseMap(), const string &sdp = "",const char *protocol = "RTSP/1.0");
-private:
-	Ticker _ticker;
-	int _iCseq = 0;
-	string _strContentBase;
-	string _strSdp;
-	string _strSession;
-	bool _bFirstPlay = true;
-    MediaInfo _mediaInfo;
-	std::weak_ptr<RtspMediaSource> _pMediaSrc;
-	RingBuffer<RtpPacket::Ptr>::RingReader::Ptr _pRtpReader;
-	Rtsp::eRtpType _rtpType = Rtsp::RTP_Invalid;
-	vector<SdpTrack::Ptr> _aTrackInfo;
+		//认证相关
+		static void onAuthSuccess(const weak_ptr<RtspSession>& weakSelf);
+		static void onAuthFailed(const weak_ptr<RtspSession>& weakSelf, const string& realm);
+		static void onAuthUser(const weak_ptr<RtspSession>& weakSelf, const string& realm, const string& authorization);
+		static void onAuthBasic(const weak_ptr<RtspSession>& weakSelf, const string& realm, const string& strBase64);
+		static void onAuthDigest(const weak_ptr<RtspSession>& weakSelf, const string& realm, const string& strMd5);
 
-	//RTP over udp
-	Socket::Ptr _apRtpSock[2]; //RTP端口,trackid idx 为数组下标
-	Socket::Ptr _apRtcpSock[2];//RTCP端口,trackid idx 为数组下标
-    unordered_set<int> _udpSockConnected;
-	//RTP over udp_multicast
-	RtpBroadCaster::Ptr _pBrdcaster;
+		void doDelay(int delaySec, const std::function<void()>& fun);
+		void cancelDelyaTask();
 
-	//登录认证
-    string _strNonce;
-    //消耗的总流量
-    uint64_t _ui64TotalBytes = 0;
+		inline void sendRtpPacket(const RtpPacket::Ptr& pkt);
+		bool	sendRtspResponse(const string& res_code, const std::initializer_list<string>& header, const string& sdp = "", const char* protocol = "RTSP/1.0");
+		bool	sendRtspResponse(const string& res_code, const StrCaseMap& header = StrCaseMap(), const string& sdp = "", const char* protocol = "RTSP/1.0");
 
-	//RTSP over HTTP
-	//quicktime 请求rtsp会产生两次tcp连接，
-	//一次发送 get 一次发送post，需要通过x-sessioncookie关联起来
-	string _http_x_sessioncookie;
-	function<void(const Buffer::Ptr &pBuf)> _onRecv;
+	    private:
+		Ticker					    _ticker;
+		int					    _iCseq = 0;
+		string					    _strContentBase;
+		string					    _strSdp;
+		string					    _strSession;
+		bool					    _bFirstPlay = true;
+		MediaInfo				    _mediaInfo;
+		std::weak_ptr<RtspMediaSource>		    _pMediaSrc;
+		RingBuffer<RtpPacket::Ptr>::RingReader::Ptr _pRtpReader;
+		Rtsp::eRtpType				    _rtpType = Rtsp::RTP_Invalid;
+		vector<SdpTrack::Ptr>			    _aTrackInfo;
 
-    std::function<void()> _delayTask;
-    uint32_t _iTaskTimeLine = 0;
-    atomic<bool> _enableSendRtp;
+		// RTP over udp
+		Socket::Ptr	_apRtpSock[2];  // RTP端口,trackid idx 为数组下标
+		Socket::Ptr	_apRtcpSock[2]; // RTCP端口,trackid idx 为数组下标
+		unordered_set<int> _udpSockConnected;
+		// RTP over udp_multicast
+		RtpBroadCaster::Ptr _pBrdcaster;
 
-    //rtsp推流相关
-	RtspToRtmpMediaSource::Ptr _pushSrc;
+		//登录认证
+		string _strNonce;
+		//消耗的总流量
+		uint64_t _ui64TotalBytes = 0;
 
-	RtcpCounter _aRtcpCnt[2]; //rtcp统计,trackid idx 为数组下标
-	Ticker _aRtcpTicker[2]; //rtcp发送时间,trackid idx 为数组下标
-	inline void sendSenderReport(bool overTcp,int iTrackIndex);
-};
+		// RTSP over HTTP
+		// quicktime 请求rtsp会产生两次tcp连接，
+		//一次发送 get 一次发送post，需要通过x-sessioncookie关联起来
+		string					_http_x_sessioncookie;
+		function<void(const Buffer::Ptr& pBuf)> _onRecv;
 
-/**
- * 支持ssl加密的rtsp服务器，可用于诸如亚马逊echo show这样的设备访问
- */
-typedef TcpSessionWithSSL<RtspSession> RtspSessionWithSSL;
+		std::function<void()> _delayTask;
+		uint32_t	      _iTaskTimeLine = 0;
+		atomic<bool>	  _enableSendRtp;
+
+		// rtsp推流相关
+		RtspToRtmpMediaSource::Ptr _pushSrc;
+
+		RtcpCounter _aRtcpCnt[2];    // rtcp统计,trackid idx 为数组下标
+		Ticker      _aRtcpTicker[2]; // rtcp发送时间,trackid idx 为数组下标
+		inline void sendSenderReport(bool overTcp, int iTrackIndex);
+	};
+
+	/**
+	 * 支持ssl加密的rtsp服务器，可用于诸如亚马逊echo show这样的设备访问
+	 */
+	typedef TcpSessionWithSSL<RtspSession> RtspSessionWithSSL;
 
 } /* namespace mediakit */
 

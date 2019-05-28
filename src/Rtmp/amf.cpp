@@ -33,7 +33,8 @@
 using namespace toolkit;
 
 /////////////////////AMFValue/////////////////////////////
-inline void AMFValue::destroy() {
+inline void AMFValue::destroy()
+{
 	switch (_type) {
 	case AMF_STRING:
 		if (_value.string) {
@@ -58,7 +59,8 @@ inline void AMFValue::destroy() {
 		break;
 	}
 }
-inline void AMFValue::init() {
+inline void AMFValue::init()
+{
 	switch (_type) {
 	case AMF_OBJECT:
 	case AMF_ECMA_ARRAY:
@@ -74,63 +76,70 @@ inline void AMFValue::init() {
 	default:
 		break;
 	}
-
 }
-AMFValue::AMFValue(AMFType type) :
-		_type(type) {
+AMFValue::AMFValue(AMFType type)
+	: _type(type)
+{
 	init();
 }
 
-
-AMFValue::~AMFValue() {
+AMFValue::~AMFValue()
+{
 	destroy();
 }
 
-AMFValue::AMFValue(const char *s) :
-		_type(AMF_STRING) {
+AMFValue::AMFValue(const char* s)
+	: _type(AMF_STRING)
+{
 	init();
 	*_value.string = s;
 }
 
-
-AMFValue::AMFValue(const std::string &s) :
-		_type(AMF_STRING) {
+AMFValue::AMFValue(const std::string& s)
+	: _type(AMF_STRING)
+{
 	init();
 	*_value.string = s;
 }
 
-AMFValue::AMFValue(double n) :
-		_type(AMF_NUMBER) {
+AMFValue::AMFValue(double n)
+	: _type(AMF_NUMBER)
+{
 	init();
 	_value.number = n;
 }
 
-AMFValue::AMFValue(int i) :
-		_type(AMF_INTEGER) {
+AMFValue::AMFValue(int i)
+	: _type(AMF_INTEGER)
+{
 	init();
 	_value.integer = i;
 }
 
-AMFValue::AMFValue(bool b) :
-		_type(AMF_BOOLEAN) {
+AMFValue::AMFValue(bool b)
+	: _type(AMF_BOOLEAN)
+{
 	init();
 	_value.boolean = b;
 }
 
-AMFValue::AMFValue(const AMFValue &from) :
-		_type(AMF_NULL) {
+AMFValue::AMFValue(const AMFValue& from)
+	: _type(AMF_NULL)
+{
 	*this = from;
 }
 
-AMFValue::AMFValue(AMFValue &&from) {
+AMFValue::AMFValue(AMFValue&& from)
+{
 	*this = std::forward<AMFValue>(from);
 }
 
-AMFValue& AMFValue::operator =(const AMFValue &from) {
-	return *this = const_cast<AMFValue &&>(from);
-
+AMFValue& AMFValue::operator=(const AMFValue& from)
+{
+	return *this = const_cast<AMFValue&&>(from);
 }
-AMFValue& AMFValue::operator =(AMFValue &&from) {
+AMFValue& AMFValue::operator=(AMFValue&& from)
+{
 	destroy();
 	_type = from._type;
 	init();
@@ -158,102 +167,108 @@ AMFValue& AMFValue::operator =(AMFValue &&from) {
 		break;
 	}
 	return *this;
-
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
-enum {
-	AMF0_NUMBER,
-	AMF0_BOOLEAN,
-	AMF0_STRING,
-	AMF0_OBJECT,
-	AMF0_MOVIECLIP,
-	AMF0_NULL,
-	AMF0_UNDEFINED,
-	AMF0_REFERENCE,
-	AMF0_ECMA_ARRAY,
-	AMF0_OBJECT_END,
-	AMF0_STRICT_ARRAY,
-	AMF0_DATE,
-	AMF0_LONG_STRING,
-	AMF0_UNSUPPORTED,
-	AMF0_RECORD_SET,
-	AMF0_XML_OBJECT,
-	AMF0_TYPED_OBJECT,
-	AMF0_SWITCH_AMF3,
+enum { AMF0_NUMBER,
+       AMF0_BOOLEAN,
+       AMF0_STRING,
+       AMF0_OBJECT,
+       AMF0_MOVIECLIP,
+       AMF0_NULL,
+       AMF0_UNDEFINED,
+       AMF0_REFERENCE,
+       AMF0_ECMA_ARRAY,
+       AMF0_OBJECT_END,
+       AMF0_STRICT_ARRAY,
+       AMF0_DATE,
+       AMF0_LONG_STRING,
+       AMF0_UNSUPPORTED,
+       AMF0_RECORD_SET,
+       AMF0_XML_OBJECT,
+       AMF0_TYPED_OBJECT,
+       AMF0_SWITCH_AMF3,
 };
 
-enum {
-	AMF3_UNDEFINED,
-	AMF3_NULL,
-	AMF3_FALSE,
-	AMF3_TRUE,
-	AMF3_INTEGER,
-	AMF3_NUMBER,
-	AMF3_STRING,
-	AMF3_LEGACY_XML,
-	AMF3_DATE,
-	AMF3_ARRAY,
-	AMF3_OBJECT,
-	AMF3_XML,
-	AMF3_BYTE_ARRAY,
+enum { AMF3_UNDEFINED,
+       AMF3_NULL,
+       AMF3_FALSE,
+       AMF3_TRUE,
+       AMF3_INTEGER,
+       AMF3_NUMBER,
+       AMF3_STRING,
+       AMF3_LEGACY_XML,
+       AMF3_DATE,
+       AMF3_ARRAY,
+       AMF3_OBJECT,
+       AMF3_XML,
+       AMF3_BYTE_ARRAY,
 };
 
 ////////////////////////////////Encoder//////////////////////////////////////////
-AMFEncoder & AMFEncoder::operator <<(const char *s) {
+AMFEncoder& AMFEncoder::operator<<(const char* s)
+{
 	if (s) {
 		buf += char(AMF0_STRING);
 		uint16_t str_len = htons(strlen(s));
-		buf.append((char *) &str_len, 2);
+		buf.append((char*)&str_len, 2);
 		buf += s;
-	} else {
+	}
+	else {
 		buf += char(AMF0_NULL);
 	}
 	return *this;
 }
-AMFEncoder & AMFEncoder::operator <<(const std::string &s) {
+AMFEncoder& AMFEncoder::operator<<(const std::string& s)
+{
 	if (!s.empty()) {
 		buf += char(AMF0_STRING);
 		uint16_t str_len = htons(s.size());
-		buf.append((char *) &str_len, 2);
+		buf.append((char*)&str_len, 2);
 		buf += s;
-	} else {
+	}
+	else {
 		buf += char(AMF0_NULL);
 	}
 	return *this;
 }
-AMFEncoder & AMFEncoder::operator <<(std::nullptr_t) {
+AMFEncoder& AMFEncoder::operator<<(std::nullptr_t)
+{
 	buf += char(AMF0_NULL);
 	return *this;
 }
-AMFEncoder & AMFEncoder::write_undefined() {
+AMFEncoder& AMFEncoder::write_undefined()
+{
 	buf += char(AMF0_UNDEFINED);
 	return *this;
-
 }
-AMFEncoder & AMFEncoder::operator <<(const int n){
+AMFEncoder& AMFEncoder::operator<<(const int n)
+{
 	return (*this) << (double)n;
 }
-AMFEncoder & AMFEncoder::operator <<(const double n) {
+AMFEncoder& AMFEncoder::operator<<(const double n)
+{
 	buf += char(AMF0_NUMBER);
 	uint64_t encoded = 0;
 	memcpy(&encoded, &n, 8);
 	uint32_t val = htonl(encoded >> 32);
-	buf.append((char *) &val, 4);
+	buf.append((char*)&val, 4);
 	val = htonl(encoded);
-	buf.append((char *) &val, 4);
+	buf.append((char*)&val, 4);
 	return *this;
 }
 
-AMFEncoder & AMFEncoder::operator <<(const bool b) {
+AMFEncoder& AMFEncoder::operator<<(const bool b)
+{
 	buf += char(AMF0_BOOLEAN);
 	buf += char(b);
 	return *this;
 }
 
-AMFEncoder & AMFEncoder::operator <<(const AMFValue& value) {
-	switch ((int) value.type()) {
+AMFEncoder& AMFEncoder::operator<<(const AMFValue& value)
+{
+	switch ((int)value.type()) {
 	case AMF_STRING:
 		*this << value.as_string();
 		break;
@@ -268,26 +283,24 @@ AMFEncoder & AMFEncoder::operator <<(const AMFValue& value) {
 		break;
 	case AMF_OBJECT: {
 		buf += char(AMF0_OBJECT);
-		for (auto &pr : value.getMap()) {
+		for (auto& pr : value.getMap()) {
 			write_key(pr.first);
 			*this << pr.second;
 		}
 		write_key("");
 		buf += char(AMF0_OBJECT_END);
-	}
-		break;
+	} break;
 	case AMF_ECMA_ARRAY: {
 		buf += char(AMF0_ECMA_ARRAY);
 		uint32_t sz = htonl(value.getMap().size());
-		buf.append((char *) &sz, 4);
-		for (auto &pr : value.getMap()) {
+		buf.append((char*)&sz, 4);
+		for (auto& pr : value.getMap()) {
 			write_key(pr.first);
 			*this << pr.second;
 		}
 		write_key("");
 		buf += char(AMF0_OBJECT_END);
-	}
-		break;
+	} break;
 	case AMF_NULL:
 		*this << nullptr;
 		break;
@@ -297,35 +310,36 @@ AMFEncoder & AMFEncoder::operator <<(const AMFValue& value) {
 	case AMF_STRICT_ARRAY: {
 		buf += char(AMF0_STRICT_ARRAY);
 		uint32_t sz = htonl(value.getArr().size());
-		buf.append((char *) &sz, 4);
-		for (auto &val : value.getArr()) {
+		buf.append((char*)&sz, 4);
+		for (auto& val : value.getArr()) {
 			*this << val;
 		}
-		//write_key("");
-		//buf += char(AMF0_OBJECT_END);
-	}
-		break;
+		// write_key("");
+		// buf += char(AMF0_OBJECT_END);
+	} break;
 	}
 	return *this;
-
 }
 
-void AMFEncoder::write_key(const std::string& s) {
+void AMFEncoder::write_key(const std::string& s)
+{
 	uint16_t str_len = htons(s.size());
-	buf.append((char *) &str_len, 2);
+	buf.append((char*)&str_len, 2);
 	buf += s;
 }
 
 //////////////////Decoder//////////////////
 
-uint8_t AMFDecoder::front() {
+uint8_t AMFDecoder::front()
+{
 	if (pos >= buf.size()) {
 		throw std::runtime_error("Not enough data");
 	}
 	return uint8_t(buf[pos]);
 }
 
-uint8_t AMFDecoder::pop_front() {
+uint8_t AMFDecoder::pop_front()
+{
 	if (version == 0 && front() == AMF0_SWITCH_AMF3) {
 		InfoL << "entering AMF3 mode";
 		pos++;
@@ -338,32 +352,30 @@ uint8_t AMFDecoder::pop_front() {
 	return uint8_t(buf[pos++]);
 }
 
-template<>
-double AMFDecoder::load<double>() {
+template<> double AMFDecoder::load<double>()
+{
 	if (pop_front() != AMF0_NUMBER) {
 		throw std::runtime_error("Expected a number");
 	}
 	if (pos + 8 > buf.size()) {
 		throw std::runtime_error("Not enough data");
 	}
-	uint64_t val = ((uint64_t) load_be32(&buf[pos]) << 32)
-			| load_be32(&buf[pos + 4]);
-	double n = 0;
+	uint64_t val = ((uint64_t)load_be32(&buf[pos]) << 32) | load_be32(&buf[pos + 4]);
+	double   n   = 0;
 	memcpy(&n, &val, 8);
 	pos += 8;
 	return n;
-
 }
 
-template<>
-bool AMFDecoder::load<bool>() {
+template<> bool AMFDecoder::load<bool>()
+{
 	if (pop_front() != AMF0_BOOLEAN) {
 		throw std::runtime_error("Expected a boolean");
 	}
 	return pop_front() != 0;
 }
-template<>
-unsigned int AMFDecoder::load<unsigned int>() {
+template<> unsigned int AMFDecoder::load<unsigned int>()
+{
 	unsigned int value = 0;
 	for (int i = 0; i < 4; ++i) {
 		uint8_t b = pop_front();
@@ -379,26 +391,27 @@ unsigned int AMFDecoder::load<unsigned int>() {
 	return value;
 }
 
-template<>
-int AMFDecoder::load<int>() {
+template<> int AMFDecoder::load<int>()
+{
 	if (version == 3) {
 		return load<unsigned int>();
-	} else {
+	}
+	else {
 		return load<double>();
 	}
 }
 
-template<>
-std::string AMFDecoder::load<std::string>() {
-	size_t str_len = 0;
-	uint8_t type = pop_front();
+template<> std::string AMFDecoder::load<std::string>()
+{
+	size_t  str_len = 0;
+	uint8_t type    = pop_front();
 	if (version == 3) {
 		if (type != AMF3_STRING) {
 			throw std::runtime_error("Expected a string");
 		}
 		str_len = load<unsigned int>() / 2;
-
-	} else {
+	}
+	else {
 		if (type != AMF0_STRING) {
 			throw std::runtime_error("Expected a string");
 		}
@@ -416,8 +429,8 @@ std::string AMFDecoder::load<std::string>() {
 	return s;
 }
 
-template<>
-AMFValue AMFDecoder::load<AMFValue>() {
+template<> AMFValue AMFDecoder::load<AMFValue>()
+{
 	uint8_t type = front();
 	if (version == 3) {
 		switch (type) {
@@ -444,10 +457,10 @@ AMFValue AMFDecoder::load<AMFValue>() {
 			pos++;
 			return AMF_UNDEFINED;
 		default:
-			throw std::runtime_error(
-			StrPrinter << "Unsupported AMF3 type:" << (int) type << endl);
+			throw std::runtime_error(StrPrinter << "Unsupported AMF3 type:" << (int)type << endl);
 		}
-	} else {
+	}
+	else {
 		switch (type) {
 		case AMF0_STRING:
 			return load<std::string>();
@@ -468,14 +481,13 @@ AMFValue AMFDecoder::load<AMFValue>() {
 		case AMF0_STRICT_ARRAY:
 			return load_arr();
 		default:
-			throw std::runtime_error(
-			StrPrinter << "Unsupported AMF type:" << (int) type << endl);
+			throw std::runtime_error(StrPrinter << "Unsupported AMF type:" << (int)type << endl);
 		}
 	}
-
 }
 
-std::string AMFDecoder::load_key() {
+std::string AMFDecoder::load_key()
+{
 	if (pos + 2 > buf.size()) {
 		throw std::runtime_error("Not enough data");
 	}
@@ -487,10 +499,10 @@ std::string AMFDecoder::load_key() {
 	std::string s(buf, pos, str_len);
 	pos += str_len;
 	return s;
-
 }
 
-AMFValue AMFDecoder::load_object() {
+AMFValue AMFDecoder::load_object()
+{
 	AMFValue object(AMF_OBJECT);
 	if (pop_front() != AMF0_OBJECT) {
 		throw std::runtime_error("Expected an object");
@@ -508,7 +520,8 @@ AMFValue AMFDecoder::load_object() {
 	return object;
 }
 
-AMFValue AMFDecoder::load_ecma() {
+AMFValue AMFDecoder::load_ecma()
+{
 	/* ECMA array is the same as object, with 4 extra zero bytes */
 	AMFValue object(AMF_ECMA_ARRAY);
 	if (pop_front() != AMF0_ECMA_ARRAY) {
@@ -530,7 +543,8 @@ AMFValue AMFDecoder::load_ecma() {
 	}
 	return object;
 }
-AMFValue AMFDecoder::load_arr() {
+AMFValue AMFDecoder::load_arr()
+{
 	/* ECMA array is the same as object, with 4 extra zero bytes */
 	AMFValue object(AMF_STRICT_ARRAY);
 	if (pop_front() != AMF0_STRICT_ARRAY) {

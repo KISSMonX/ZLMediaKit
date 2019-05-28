@@ -41,71 +41,74 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class RtmpSession: public TcpSession ,public  RtmpProtocol , public MediaSourceEvent{
-public:
-	typedef std::shared_ptr<RtmpSession> Ptr;
-	RtmpSession(const Socket::Ptr &_sock);
-	virtual ~RtmpSession();
-	void onRecv(const Buffer::Ptr &pBuf) override;
-	void onError(const SockException &err) override;
-	void onManager() override;
-private:
-	void onProcessCmd(AMFDecoder &dec);
-	void onCmd_connect(AMFDecoder &dec);
-	void onCmd_createStream(AMFDecoder &dec);
+	class RtmpSession : public TcpSession, public RtmpProtocol, public MediaSourceEvent {
+	    public:
+		typedef std::shared_ptr<RtmpSession> Ptr;
+		RtmpSession(const Socket::Ptr& _sock);
+		virtual ~RtmpSession();
+		void onRecv(const Buffer::Ptr& pBuf) override;
+		void onError(const SockException& err) override;
+		void onManager() override;
 
-	void onCmd_publish(AMFDecoder &dec);
-	void onCmd_deleteStream(AMFDecoder &dec);
+	    private:
+		void onProcessCmd(AMFDecoder& dec);
+		void onCmd_connect(AMFDecoder& dec);
+		void onCmd_createStream(AMFDecoder& dec);
 
-	void onCmd_play(AMFDecoder &dec);
-	void onCmd_play2(AMFDecoder &dec);
-	void doPlay(AMFDecoder &dec);
-	void doPlayResponse(const string &err,const std::function<void(bool)> &cb);
-	void sendPlayResponse(const string &err,const RtmpMediaSource::Ptr &src);
+		void onCmd_publish(AMFDecoder& dec);
+		void onCmd_deleteStream(AMFDecoder& dec);
 
-	void onCmd_seek(AMFDecoder &dec);
-	void onCmd_pause(AMFDecoder &dec);
-	void setMetaData(AMFDecoder &dec);
+		void onCmd_play(AMFDecoder& dec);
+		void onCmd_play2(AMFDecoder& dec);
+		void doPlay(AMFDecoder& dec);
+		void doPlayResponse(const string& err, const std::function<void(bool)>& cb);
+		void sendPlayResponse(const string& err, const RtmpMediaSource::Ptr& src);
 
-	void onSendMedia(const RtmpPacket::Ptr &pkt);
-	void onSendRawData(const Buffer::Ptr &buffer) override{
-        _ui64TotalBytes += buffer->size();
-		send(buffer);
-	}
-	void onRtmpChunk(RtmpPacket &chunkData) override;
+		void onCmd_seek(AMFDecoder& dec);
+		void onCmd_pause(AMFDecoder& dec);
+		void setMetaData(AMFDecoder& dec);
 
-	template<typename first, typename second>
-	inline void sendReply(const char *str, const first &reply, const second &status) {
-		AMFEncoder invoke;
-		invoke << str << _dNowReqID << reply << status;
-		sendResponse(MSG_CMD, invoke.data());
-	}
+		void onSendMedia(const RtmpPacket::Ptr& pkt);
+		void onSendRawData(const Buffer::Ptr& buffer) override
+		{
+			_ui64TotalBytes += buffer->size();
+			send(buffer);
+		}
+		void onRtmpChunk(RtmpPacket& chunkData) override;
 
-    bool close() override {
-        InfoL << "kick out:" << _mediaInfo._vhost << " " << _mediaInfo._app << " " << _mediaInfo._streamid;
-        safeShutdown();
-        return true;
-    }
+		template<typename first, typename second> inline void sendReply(const char* str, const first& reply, const second& status)
+		{
+			AMFEncoder invoke;
+			invoke << str << _dNowReqID << reply << status;
+			sendResponse(MSG_CMD, invoke.data());
+		}
 
-    void doDelay(int delaySec,const std::function<void()> &fun);
-	void cancelDelyaTask();
-	void findStream(const function<void(const RtmpMediaSource::Ptr &src)> &cb ,bool retry = true);
-private:
-	std::string _strTcUrl;
-	MediaInfo _mediaInfo;
-	double _dNowReqID = 0;
-	Ticker _ticker;//数据接收时间
-	SmoothTicker _stampTicker[2];//时间戳生产器
-	RingBuffer<RtmpPacket::Ptr>::RingReader::Ptr _pRingReader;
-	std::shared_ptr<RtmpMediaSource> _pPublisherSrc;
-	std::weak_ptr<RtmpMediaSource> _pPlayerSrc;
-	uint32_t _aui32FirstStamp[2] = {0};
-	//消耗的总流量
-	uint64_t _ui64TotalBytes = 0;
-    std::function<void()> _delayTask;
-    uint32_t _iTaskTimeLine = 0;
+		bool close() override
+		{
+			InfoL << "kick out:" << _mediaInfo._vhost << " " << _mediaInfo._app << " " << _mediaInfo._streamid;
+			safeShutdown();
+			return true;
+		}
 
-};
+		void doDelay(int delaySec, const std::function<void()>& fun);
+		void cancelDelyaTask();
+		void findStream(const function<void(const RtmpMediaSource::Ptr& src)>& cb, bool retry = true);
+
+	    private:
+		std::string				     _strTcUrl;
+		MediaInfo				     _mediaInfo;
+		double					     _dNowReqID = 0;
+		Ticker					     _ticker;	 //数据接收时间
+		SmoothTicker				     _stampTicker[2]; //时间戳生产器
+		RingBuffer<RtmpPacket::Ptr>::RingReader::Ptr _pRingReader;
+		std::shared_ptr<RtmpMediaSource>	     _pPublisherSrc;
+		std::weak_ptr<RtmpMediaSource>		     _pPlayerSrc;
+		uint32_t				     _aui32FirstStamp[2] = {0};
+		//消耗的总流量
+		uint64_t	      _ui64TotalBytes = 0;
+		std::function<void()> _delayTask;
+		uint32_t	      _iTaskTimeLine = 0;
+	};
 
 } /* namespace mediakit */
 

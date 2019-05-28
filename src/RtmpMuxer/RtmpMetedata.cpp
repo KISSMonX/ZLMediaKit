@@ -27,4 +27,4 @@
 #include "RtmpMetedata.h"
 namespace mediakit {
 
-}//namespace mediakit
+} // namespace mediakit

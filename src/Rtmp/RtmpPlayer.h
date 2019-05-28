@@ -45,85 +45,89 @@ using namespace mediakit::Client;
 
 namespace mediakit {
 
-class RtmpPlayer:public PlayerBase, public TcpClient,  public RtmpProtocol{
-public:
-	typedef std::shared_ptr<RtmpPlayer> Ptr;
-	RtmpPlayer(const EventPoller::Ptr &poller);
-	virtual ~RtmpPlayer();
+	class RtmpPlayer : public PlayerBase, public TcpClient, public RtmpProtocol {
+	    public:
+		typedef std::shared_ptr<RtmpPlayer> Ptr;
+		RtmpPlayer(const EventPoller::Ptr& poller);
+		virtual ~RtmpPlayer();
 
-	void play(const string &strUrl) override;
-	void pause(bool bPause) override;
-	void teardown() override;
-protected:
-	virtual bool onCheckMeta(AMFValue &val) =0;
-	virtual void onMediaData(const RtmpPacket::Ptr &chunkData) =0;
-	uint32_t getProgressMilliSecond() const;
-	void seekToMilliSecond(uint32_t ms);
-protected:
-	void onMediaData_l(const RtmpPacket::Ptr &chunkData) {
-		_mediaTicker.resetTime();
-		onMediaData(chunkData);
-	}
+		void play(const string& strUrl) override;
+		void pause(bool bPause) override;
+		void teardown() override;
 
-	void onPlayResult_l(const SockException &ex);
+	    protected:
+		virtual bool onCheckMeta(AMFValue& val)			   = 0;
+		virtual void onMediaData(const RtmpPacket::Ptr& chunkData) = 0;
+		uint32_t     getProgressMilliSecond() const;
+		void	 seekToMilliSecond(uint32_t ms);
 
-	//for Tcpclient
-	void onRecv(const Buffer::Ptr &pBuf) override;
-	void onConnect(const SockException &err) override;
-	void onErr(const SockException &ex) override;
-	//fro RtmpProtocol
-	void onRtmpChunk(RtmpPacket &chunkData) override;
-	void onStreamDry(uint32_t ui32StreamId) override;
-    void onSendRawData(const Buffer::Ptr &buffer) override{
-        send(buffer);
-    }
+	    protected:
+		void onMediaData_l(const RtmpPacket::Ptr& chunkData)
+		{
+			_mediaTicker.resetTime();
+			onMediaData(chunkData);
+		}
 
-	template<typename FUN>
-	inline void addOnResultCB(const FUN &fun) {
-		lock_guard<recursive_mutex> lck(_mtxOnResultCB);
-		_mapOnResultCB.emplace(_iReqID, fun);
-	}
-	template<typename FUN>
-	inline void addOnStatusCB(const FUN &fun) {
-		lock_guard<recursive_mutex> lck(_mtxOnStatusCB);
-		_dqOnStatusCB.emplace_back(fun);
-	}
+		void onPlayResult_l(const SockException& ex);
 
-	void onCmd_result(AMFDecoder &dec);
-	void onCmd_onStatus(AMFDecoder &dec);
-	void onCmd_onMetaData(AMFDecoder &dec);
+		// for Tcpclient
+		void onRecv(const Buffer::Ptr& pBuf) override;
+		void onConnect(const SockException& err) override;
+		void onErr(const SockException& ex) override;
+		// fro RtmpProtocol
+		void onRtmpChunk(RtmpPacket& chunkData) override;
+		void onStreamDry(uint32_t ui32StreamId) override;
+		void onSendRawData(const Buffer::Ptr& buffer) override
+		{
+			send(buffer);
+		}
 
-	inline void send_connect();
-	inline void send_createStream();
-	inline void send_play();
-	inline void send_pause(bool bPause);
+		template<typename FUN> inline void addOnResultCB(const FUN& fun)
+		{
+			lock_guard<recursive_mutex> lck(_mtxOnResultCB);
+			_mapOnResultCB.emplace(_iReqID, fun);
+		}
+		template<typename FUN> inline void addOnStatusCB(const FUN& fun)
+		{
+			lock_guard<recursive_mutex> lck(_mtxOnStatusCB);
+			_dqOnStatusCB.emplace_back(fun);
+		}
 
-	string _strApp;
-	string _strStream;
-	string _strTcUrl;
-	bool _bPaused = false;
+		void onCmd_result(AMFDecoder& dec);
+		void onCmd_onStatus(AMFDecoder& dec);
+		void onCmd_onMetaData(AMFDecoder& dec);
 
-	unordered_map<int, function<void(AMFDecoder &dec)> > _mapOnResultCB;
-	recursive_mutex _mtxOnResultCB;
-	deque<function<void(AMFValue &dec)> > _dqOnStatusCB;
-	recursive_mutex _mtxOnStatusCB;
+		inline void send_connect();
+		inline void send_createStream();
+		inline void send_play();
+		inline void send_pause(bool bPause);
 
-	typedef void (RtmpPlayer::*rtmpCMDHandle)(AMFDecoder &dec);
-	static unordered_map<string, rtmpCMDHandle> g_mapCmd;
+		string _strApp;
+		string _strStream;
+		string _strTcUrl;
+		bool   _bPaused = false;
 
-	//超时功能实现
-	Ticker _mediaTicker;
-	std::shared_ptr<Timer> _pMediaTimer;
-	std::shared_ptr<Timer> _pPlayTimer;
-	//心跳定时器
-	std::shared_ptr<Timer> _pBeatTimer;
+		unordered_map<int, function<void(AMFDecoder& dec)>> _mapOnResultCB;
+		recursive_mutex					    _mtxOnResultCB;
+		deque<function<void(AMFValue& dec)>>		    _dqOnStatusCB;
+		recursive_mutex					    _mtxOnStatusCB;
 
-	//播放进度控制
-	uint32_t _iSeekTo = 0;
-	uint32_t _aiFistStamp[2] = { 0, 0 };
-	uint32_t _aiNowStamp[2] = { 0, 0 };
-	Ticker _aNowStampTicker[2];
-};
+		typedef void (RtmpPlayer::*rtmpCMDHandle)(AMFDecoder& dec);
+		static unordered_map<string, rtmpCMDHandle> g_mapCmd;
+
+		//超时功能实现
+		Ticker		       _mediaTicker;
+		std::shared_ptr<Timer> _pMediaTimer;
+		std::shared_ptr<Timer> _pPlayTimer;
+		//心跳定时器
+		std::shared_ptr<Timer> _pBeatTimer;
+
+		//播放进度控制
+		uint32_t _iSeekTo	= 0;
+		uint32_t _aiFistStamp[2] = {0, 0};
+		uint32_t _aiNowStamp[2]  = {0, 0};
+		Ticker   _aNowStampTicker[2];
+	};
 
 } /* namespace mediakit */
 

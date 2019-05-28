@@ -75,15 +75,16 @@ void createPusher(const EventPoller::Ptr& poller, const string& schema, const st
 //推流失败或断开延迟2秒后重试推流
 void rePushDelay(const EventPoller::Ptr& poller, const string& schema, const string& vhost, const string& app, const string& stream, const string& url)
 {
-	g_timer = std::make_shared<Timer>(2,
-					  [poller, schema, vhost, app, stream, url]() {
-						  InfoL << "Re-Publishing...";
-						  //重新推流
-						  createPusher(poller, schema, vhost, app, stream, url);
-						  //此任务不重复
-						  return false;
-					  },
-					  poller);
+	g_timer = std::make_shared<Timer>(
+		2,
+		[poller, schema, vhost, app, stream, url]() {
+			InfoL << "Re-Publishing...";
+			//重新推流
+			createPusher(poller, schema, vhost, app, stream, url);
+			//此任务不重复
+			return false;
+		},
+		poller);
 }
 
 //这里才是真正执行main函数，你可以把函数名(domain)改成main，然后就可以输入自定义url了

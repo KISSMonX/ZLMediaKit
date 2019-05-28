@@ -37,107 +37,80 @@
 using namespace std;
 using namespace toolkit;
 
-namespace mediakit{
+namespace mediakit {
 
-class Factory {
-public:
+	class Factory {
+	    public:
+		/**
+		 * 根据CodecId获取Track，该Track的ready()状态一般都为false
+		 * @param codecId 编解码器id
+		 * @return
+		 */
+		static Track::Ptr getTrackByCodecId(CodecId codecId);
 
-    /**
-     * 根据CodecId获取Track，该Track的ready()状态一般都为false
-     * @param codecId 编解码器id
-     * @return
-     */
-    static Track::Ptr getTrackByCodecId(CodecId codecId);
+		////////////////////////////////rtsp相关//////////////////////////////////
+		/**
+		 * 根据sdp生成Track对象
+		 */
+		static Track::Ptr getTrackBySdp(const SdpTrack::Ptr& track);
 
-    ////////////////////////////////rtsp相关//////////////////////////////////
-    /**
-     * 根据sdp生成Track对象
-     */
-    static Track::Ptr getTrackBySdp(const SdpTrack::Ptr &track);
+		/**
+		 * 根据Track生成SDP对象
+		 * @param track 媒体信息
+		 * @return 返回sdp对象
+		 */
+		static Sdp::Ptr getSdpByTrack(const Track::Ptr& track);
 
-    /**
-    * 根据Track生成SDP对象
-    * @param track 媒体信息
-    * @return 返回sdp对象
-    */
-    static Sdp::Ptr getSdpByTrack(const Track::Ptr &track);
+		/**
+		 * 根据CodecId生成Rtp打包器
+		 * @param codecId
+		 * @param ui32Ssrc
+		 * @param ui32MtuSize
+		 * @param ui32SampleRate
+		 * @param ui8PlayloadType
+		 * @param ui8Interleaved
+		 * @return
+		 */
+		static RtpCodec::Ptr getRtpEncoderById(CodecId codecId, uint32_t ui32Ssrc, uint32_t ui32MtuSize, uint32_t ui32SampleRate, uint8_t ui8PlayloadType, uint8_t ui8Interleaved);
 
+		/**
+		 * 根据Track生成Rtp解包器
+		 * @param track
+		 * @return
+		 */
+		static RtpCodec::Ptr getRtpDecoderByTrack(const Track::Ptr& track);
 
-    /**
-     * 根据CodecId生成Rtp打包器
-     * @param codecId
-     * @param ui32Ssrc
-     * @param ui32MtuSize
-     * @param ui32SampleRate
-     * @param ui8PlayloadType
-     * @param ui8Interleaved
-     * @return
-     */
-    static RtpCodec::Ptr getRtpEncoderById(CodecId codecId,
-                                           uint32_t ui32Ssrc,
-                                           uint32_t ui32MtuSize,
-                                           uint32_t ui32SampleRate,
-                                           uint8_t ui8PlayloadType,
-                                           uint8_t ui8Interleaved);
+		////////////////////////////////rtmp相关//////////////////////////////////
 
-    /**
-     * 根据Track生成Rtp解包器
-     * @param track
-     * @return
-     */
-    static RtpCodec::Ptr getRtpDecoderByTrack(const Track::Ptr &track);
+		/**
+		 * 根据amf对象获取响应的Track
+		 * @param amf rtmp metedata中的videocodecid或audiocodecid的值
+		 * @return
+		 */
+		static Track::Ptr getTrackByAmf(const AMFValue& amf);
 
+		/**
+		 * 根据amf对象获取相应的CodecId
+		 * @param val rtmp metedata中的videocodecid或audiocodecid的值
+		 * @return
+		 */
+		static CodecId getCodecIdByAmf(const AMFValue& val);
 
-    ////////////////////////////////rtmp相关//////////////////////////////////
+		/**
+		 * 根据Track获取Rtmp的编解码器
+		 * @param track 媒体描述对象
+		 * @return
+		 */
+		static RtmpCodec::Ptr getRtmpCodecByTrack(const Track::Ptr& track);
 
-    /**
-     * 根据amf对象获取响应的Track
-     * @param amf rtmp metedata中的videocodecid或audiocodecid的值
-     * @return
-     */
-    static Track::Ptr getTrackByAmf(const AMFValue &amf);
+		/**
+		 * 根据codecId获取rtmp的codec描述
+		 * @param codecId
+		 * @return
+		 */
+		static AMFValue getAmfByCodecId(CodecId codecId);
+	};
 
-    /**
-     * 根据amf对象获取相应的CodecId
-     * @param val rtmp metedata中的videocodecid或audiocodecid的值
-     * @return
-     */
-    static CodecId getCodecIdByAmf(const AMFValue &val);
+} // namespace mediakit
 
-    /**
-     * 根据Track获取Rtmp的编解码器
-     * @param track 媒体描述对象
-     * @return
-     */
-    static RtmpCodec::Ptr getRtmpCodecByTrack(const Track::Ptr &track);
-
-
-    /**
-     * 根据codecId获取rtmp的codec描述
-     * @param codecId
-     * @return
-     */
-    static AMFValue getAmfByCodecId(CodecId codecId);
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}//namespace mediakit
-
-#endif //ZLMEDIAKIT_FACTORY_H
+#endif // ZLMEDIAKIT_FACTORY_H

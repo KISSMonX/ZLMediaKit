@@ -41,54 +41,63 @@ using namespace toolkit;
 
 namespace mediakit {
 
-class RtspPlayerImp: public PlayerImp<RtspPlayer,RtspDemuxer> {
-public:
-	typedef std::shared_ptr<RtspPlayerImp> Ptr;
-	RtspPlayerImp(const EventPoller::Ptr &poller) : PlayerImp<RtspPlayer,RtspDemuxer>(poller){}
-	virtual ~RtspPlayerImp(){
-        DebugL<<endl;
-    };
-    float getProgress() const override{
-        if(getDuration() > 0){
-            return getProgressMilliSecond() / (getDuration() * 1000);
-        }
-        return PlayerBase::getProgress();
-        
-    };
-    void seekTo(float fProgress) override{
-        fProgress = MAX(float(0),MIN(fProgress,float(1.0)));
-        seekToMilliSecond(fProgress * getDuration() * 1000);
-    };
-private:
-	//派生类回调函数
-	bool onCheckSDP(const string &sdp, const SdpAttr &sdpAttr) override {
-		_pRtspMediaSrc = dynamic_pointer_cast<RtspMediaSource>(_pMediaSrc);
-		if(_pRtspMediaSrc){
-			_pRtspMediaSrc->onGetSDP(sdp);
+	class RtspPlayerImp : public PlayerImp<RtspPlayer, RtspDemuxer> {
+	    public:
+		typedef std::shared_ptr<RtspPlayerImp> Ptr;
+		RtspPlayerImp(const EventPoller::Ptr& poller)
+			: PlayerImp<RtspPlayer, RtspDemuxer>(poller)
+		{
 		}
-        _parser.reset(new RtspDemuxer(sdpAttr));
-        return true;
-	}
-	void onRecvRTP(const RtpPacket::Ptr &rtppt, const SdpTrack::Ptr &track) override {
-        if(_pRtspMediaSrc){
-            _pRtspMediaSrc->onWrite(rtppt,true);
-        }
-        _parser->inputRtp(rtppt);
+		virtual ~RtspPlayerImp()
+		{
+			DebugL << endl;
+		};
+		float getProgress() const override
+		{
+			if (getDuration() > 0) {
+				return getProgressMilliSecond() / (getDuration() * 1000);
+			}
+			return PlayerBase::getProgress();
+		};
+		void seekTo(float fProgress) override
+		{
+			fProgress = MAX(float(0), MIN(fProgress, float(1.0)));
+			seekToMilliSecond(fProgress * getDuration() * 1000);
+		};
 
-        //由于我们重载isInited方法强制认为一旦获取sdp那么就初始化Track成功，
-        //所以我们不需要在后续检验是否初始化成功
-        //checkInited(0);
-    }
+	    private:
+		//派生类回调函数
+		bool onCheckSDP(const string& sdp, const SdpAttr& sdpAttr) override
+		{
+			_pRtspMediaSrc = dynamic_pointer_cast<RtspMediaSource>(_pMediaSrc);
+			if (_pRtspMediaSrc) {
+				_pRtspMediaSrc->onGetSDP(sdp);
+			}
+			_parser.reset(new RtspDemuxer(sdpAttr));
+			return true;
+		}
+		void onRecvRTP(const RtpPacket::Ptr& rtppt, const SdpTrack::Ptr& track) override
+		{
+			if (_pRtspMediaSrc) {
+				_pRtspMediaSrc->onWrite(rtppt, true);
+			}
+			_parser->inputRtp(rtppt);
 
-    bool isInited(int analysisMs) override{
-	    //rtsp是通过sdp来完成track的初始化的，所以我们强制返回true，
-        //认为已经初始化完毕，这样可以提高rtsp打开速度
-        return true;
-    }
-private:
-	RtspMediaSource::Ptr _pRtspMediaSrc;
-    
-};
+			//由于我们重载isInited方法强制认为一旦获取sdp那么就初始化Track成功，
+			//所以我们不需要在后续检验是否初始化成功
+			// checkInited(0);
+		}
+
+		bool isInited(int analysisMs) override
+		{
+			// rtsp是通过sdp来完成track的初始化的，所以我们强制返回true，
+			//认为已经初始化完毕，这样可以提高rtsp打开速度
+			return true;
+		}
+
+	    private:
+		RtspMediaSource::Ptr _pRtspMediaSrc;
+	};
 
 } /* namespace mediakit */
 
