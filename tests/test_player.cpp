@@ -23,77 +23,72 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include <signal.h>
-#include <unistd.h>
-#include "Util/logger.h"
-#include <iostream>
+#include "H264Decoder.h"
+#include "Network/sockutil.h"
+#include "Player/MediaPlayer.h"
 #include "Poller/EventPoller.h"
 #include "Rtsp/UDPServer.h"
-#include "Player/MediaPlayer.h"
+#include "Util/logger.h"
 #include "Util/onceToken.h"
-#include "H264Decoder.h"
 #include "YuvDisplayer.h"
-#include "Network/sockutil.h"
+#include <iostream>
+#include <signal.h>
+#include <unistd.h>
 
 using namespace std;
 using namespace toolkit;
 using namespace mediakit;
 
-int main(int argc, char *argv[]) {
-    //设置退出信号处理函数
-    signal(SIGINT, [](int) { SDLDisplayerHelper::Instance().shutdown(); });
-    //设置日志
-    Logger::Instance().add(std::make_shared<ConsoleChannel>());
-    Logger::Instance().setWriter(std::make_shared<AsyncLogWriter>());
+int main(int argc, char* argv[])
+{
+	//设置退出信号处理函数
+	signal(SIGINT, [](int) { SDLDisplayerHelper::Instance().shutdown(); });
+	//设置日志
+	Logger::Instance().add(std::make_shared<ConsoleChannel>());
+	Logger::Instance().setWriter(std::make_shared<AsyncLogWriter>());
 
-    if (argc != 3) {
-        ErrorL << "\r\n测试方法：./test_player rtxp_url rtp_type\r\n"
-               << "例如：./test_player rtsp://admin:123456@127.0.0.1/live/0 0\r\n"
-               << endl;
-        return 0;
+	if (argc != 3) {
+		ErrorL << "\r\n测试方法：./test_player rtxp_url rtp_type\r\n"
+		       << "例如：./test_player rtsp://admin:123456@127.0.0.1/live/0 0\r\n"
+		       << endl;
+		return 0;
+	}
 
-    }
+	MediaPlayer::Ptr      player(new MediaPlayer());
+	weak_ptr<MediaPlayer> weakPlayer = player;
+	player->setOnPlayResult([weakPlayer](const SockException& ex) {
+		InfoL << "OnPlayResult:" << ex.what();
+		auto strongPlayer = weakPlayer.lock();
+		if (ex || !strongPlayer) {
+			return;
+		}
 
-    MediaPlayer::Ptr player(new MediaPlayer());
-    weak_ptr<MediaPlayer> weakPlayer = player;
-    player->setOnPlayResult([weakPlayer](const SockException &ex) {
-        InfoL << "OnPlayResult:" << ex.what();
-        auto strongPlayer = weakPlayer.lock();
-        if (ex || !strongPlayer) {
-            return;
-        }
+		auto viedoTrack = strongPlayer->getTrack(TrackVideo);
+		if (!viedoTrack || viedoTrack->getCodecId() != CodecH264) {
+			WarnL << "没有视频或者视频不是264编码!";
+			return;
+		}
+		SDLDisplayerHelper::Instance().doTask([viedoTrack]() {
+			std::shared_ptr<H264Decoder>  decoder(new H264Decoder);
+			std::shared_ptr<YuvDisplayer> displayer(new YuvDisplayer);
+			viedoTrack->addDelegate(std::make_shared<FrameWriterInterfaceHelper>([decoder, displayer](const Frame::Ptr& frame) {
+				SDLDisplayerHelper::Instance().doTask([decoder, displayer, frame]() {
+					AVFrame* pFrame = nullptr;
+					bool     flag   = decoder->inputVideo((unsigned char*)frame->data(), frame->size(), frame->stamp(), &pFrame);
+					if (flag) {
+						displayer->displayYUV(pFrame);
+					}
+					return true;
+				});
+			}));
+			return true;
+		});
+	});
 
-        auto viedoTrack = strongPlayer->getTrack(TrackVideo);
-        if (!viedoTrack || viedoTrack->getCodecId() != CodecH264) {
-            WarnL << "没有视频或者视频不是264编码!";
-            return;
-        }
-        SDLDisplayerHelper::Instance().doTask([viedoTrack]() {
-            std::shared_ptr<H264Decoder> decoder(new H264Decoder);
-            std::shared_ptr<YuvDisplayer> displayer(new YuvDisplayer);
-            viedoTrack->addDelegate(std::make_shared<FrameWriterInterfaceHelper>([decoder, displayer](const Frame::Ptr &frame) {
-                SDLDisplayerHelper::Instance().doTask([decoder, displayer, frame]() {
-                    AVFrame *pFrame = nullptr;
-                    bool flag = decoder->inputVideo((unsigned char *) frame->data(), frame->size(),
-                                                    frame->stamp(), &pFrame);
-                    if (flag) {
-                        displayer->displayYUV(pFrame);
-                    }
-                    return true;
-                });
-            }));
-            return true;
-        });
-    });
+	player->setOnShutdown([](const SockException& ex) { ErrorL << "OnShutdown:" << ex.what(); });
+	(*player)[kRtpType] = atoi(argv[2]);
+	player->play(argv[1]);
 
-
-    player->setOnShutdown([](const SockException &ex) {
-        ErrorL << "OnShutdown:" << ex.what();
-    });
-    (*player)[kRtpType] = atoi(argv[2]);
-    player->play(argv[1]);
-
-    SDLDisplayerHelper::Instance().runLoop();
-    return 0;
+	SDLDisplayerHelper::Instance().runLoop();
+	return 0;
 }
-
